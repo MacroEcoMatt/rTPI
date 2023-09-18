@@ -2,7 +2,7 @@ Package: rTPI
 Type: Package
 Title: Calculate Thermal and Aridity Position Index
 Version: 0.1.0
-Author@R: c(
+Authors@R: c(
     person("Watson", "Matthew", email = "mwats041@uottawa.ca", role = c("cre","aut"), comment = c(ORCID = "0000-0002-5646-8118")),
     person("Kerr", "Jeremy", email = "jkerr@uOttawa.ca", role = c("aut", "cph", "fnd"))
     )
