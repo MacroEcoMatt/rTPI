@@ -1,0 +1,28 @@
+Package: rTPI
+Type: Package
+Title: Calculate Thermal and Aridity Position Index
+Version: 0.1.0
+Author@R: c(
+    person("Watson", "Matthew", email = "mwats041@uottawa.ca", role = c("cre","aut"), comment = c(ORCID = "0000-0002-5646-8118")),
+    person("Kerr", "Jeremy", email = "jkerr@uOttawa.ca", role = c("aut", "cph", "fnd"))
+    )
+Maintainer: Matthew Watson <mwats041@uottawa.ca>
+Description: A system for calculating Thermal Position and 
+    Aridity Position Indecies. You provide environmental, or
+    location data with species genus species binomial, and are
+    returned a dataframe with TPI or API values.
+Depends:
+    dplyr,
+    R (>= 3.0.0),
+    sf,
+    climateR,
+    terra,
+Suggests:
+    testthat (>= 3.0.0)
+License: CC BY 4.0
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.3
+LazyData: true
+URL: https://github.com/MacroEcoMatt/rTPI
+Config/testthat/edition: 3
