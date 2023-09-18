@@ -48,11 +48,25 @@
 #' @export
 get_env_vars <- function(point_data, env_vars = "both", date_format = "monthly"){
   #CHECK PACKAGES
+  if(length(find.package(cliamteR, quiet = T)) == 0){
+    devtools::install_github("mikejohnson51/climateR")
+    require(climateR)
+  } else {
+    require(climateR)
+  }
+
+  if(length(find.package(AOI, quiet = T)) == 0){
+    devtools::install_github("mikejohnson51/AOI")
+    require(AOI)
+  } else {
+    require(AOI)
+  }
+
   try(if(isFALSE(require(sf)))stop("No package: sf"))
-  try(if(isFALSE(require(climateR)))stop("No package: climateR"))
   try(if(isFALSE(require(raster)))stop("No package: raster"))
-  try(if(isFALSE(require(AOI)))stop("No package: climateR"))
-  try(if(isFALSE(require(dplyr)))stop("No package: climateR"))
+  try(if(isFALSE(require(terra)))stop("No package: terra"))
+  try(if(isFALSE(require(AOI)))stop("No package: AOI"))
+  try(if(isFALSE(require(dplyr)))stop("No package: dplyr"))
   #set up output sheet
   if(isTRUE(any(is.na(point_data$Lat))) || isTRUE(any(is.na(point_data$Lon))) ||
    isTRUE(any(point_data$Lat < -90)) || isTRUE(any(point_data$Lat > 90)) ||
