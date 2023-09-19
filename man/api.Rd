@@ -63,8 +63,8 @@ that the period of calculation is during a period with no determined
 aridity index measurement for the species range.
 }
 \examples{
-#example df:
-species_data <- <- data.frame(
+#example df
+species_data <-data.frame(
                Binomial = c("Poecile atricapillus", "Poecile atricapillus"),
                Month = c(1,2),
                AMax = c(5,5),
