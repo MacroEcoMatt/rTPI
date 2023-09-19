@@ -53,7 +53,6 @@ get_env_vars <- function(point_data, env_vars = "both", date_format = "monthly")
   try(if(isFALSE(require(sf)))stop("No package: sf"))
   try(if(isFALSE(require(raster)))stop("No package: raster"))
   try(if(isFALSE(require(terra)))stop("No package: terra"))
-  try(if(isFALSE(require(AOI)))stop("No package: AOI"))
   try(if(isFALSE(require(dplyr)))stop("No package: dplyr"))
   #set up output sheet
   if(isTRUE(any(is.na(point_data$Lat))) || isTRUE(any(is.na(point_data$Lon))) ||
