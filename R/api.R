@@ -47,12 +47,12 @@
 #' @returns A Dataframe.
 #' @examples
 #' #example df:
-#' species_data <- data.frame(
+#' species_data <- <- data.frame(
 #'                Binomial = c("Poecile atricapillus", "Poecile atricapillus"),
 #'                Month = c(1,2),
-#'                AMin = c(0.2,1),
-#'                AMax = c(2,3),
-#'                Ar = c(1.5,1.6)
+#'                AMax = c(5,5),
+#'                AMin = c(2,1),
+#'                Ar = c(0,3)
 #'                )
 #'
 #' #would return API for column Tm

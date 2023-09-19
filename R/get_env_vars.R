@@ -2,10 +2,10 @@
 #'
 #' `get_env_vars` Takes dataframe submitted by user and extracts envrionmental
 #' variable from Terra Climate. Users can specify Temperature, Aridirty, or
-#' both. Can extract data based on Year, Year/Month, Year/Month/Day or Season.
-#' Requires climateR, raster, and sf packages.
+#' both. Can extract data based on Year, Year and Month, Year and Month and Day
+#' or Season. Requires climateR, terra, and sf packages.
 #'
-#' @param coord_data Input data. Must be a dataframe containing a column titled
+#' @param point_data Input data. Must be a dataframe containing a column titled
 #' "Lon" and "Lat", containing Longitude and Latitude in degrees. Depending on
 #' date of observation users should include 3 separate columns for dates: "Year"
 #' "Month" and "Day". All values for dates should be numeric. If interested in
@@ -47,13 +47,16 @@
 #'
 #' @export
 get_env_vars <- function(point_data, env_vars = "both", date_format = "monthly"){
+  aoi <- date_c <- date_pet <- NULL
   #CHECK PACKAGES
   try(if(isFALSE(require(climateR)))stop("No package: climateR"))
   try(if(isFALSE(require(AOI)))stop("No package: AOI"))
   try(if(isFALSE(require(sf)))stop("No package: sf"))
-  try(if(isFALSE(require(raster)))stop("No package: raster"))
   try(if(isFALSE(require(terra)))stop("No package: terra"))
   try(if(isFALSE(require(dplyr)))stop("No package: dplyr"))
+
+  all_packages <- c('climateR','AOI','sf', 'terra', 'dplyr')
+  invisible(lapply(all_packages, library, character.only = TRUE))
   #set up output sheet
   if(isTRUE(any(is.na(point_data$Lat))) || isTRUE(any(is.na(point_data$Lon))) ||
    isTRUE(any(point_data$Lat < -90)) || isTRUE(any(point_data$Lat > 90)) ||

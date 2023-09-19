@@ -1,6 +1,6 @@
 Package: rTPI
 Type: Package
-Title: Calculate Thermal and Aridity Position Index
+Title: Methods for Calculating Thermal and Aridity Position Index
 Version: 0.1.0
 Authors@R: c(
     person("Watson", "Matthew", email = "mwats041@uottawa.ca", role = c("cre","aut"), comment = c(ORCID = "0000-0002-5646-8118")),
@@ -12,20 +12,21 @@ Description: A system for calculating Thermal Position and
     location data with species genus species binomial, and are
     returned a dataframe with TPI or API values.
 Depends:
+    R (>= 3.5.0)
+Imports:
     dplyr,
-    R (>= 3.0.0),
     sf,
     terra,
     devtools,
-    raster,
-    testthat (>= 3.0.0)
-Imports:
     AOI,
     climateR
+Suggests:
+    testthat (>= 3.0.0),
+    covr
 Remotes:
-    mikejohnson51/climateR,
-    mikejohnson51/AOI
-License: CC BY 4.0
+    github::mikejohnson51/climateR,
+    github::mikejohnson51/AOI
+License: CC BY 4.0 + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3

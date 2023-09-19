@@ -7,6 +7,15 @@
 get_env_vars(point_data, env_vars = "both", date_format = "monthly")
 }
 \arguments{
+\item{point_data}{Input data. Must be a dataframe containing a column titled
+"Lon" and "Lat", containing Longitude and Latitude in degrees. Depending on
+date of observation users should include 3 separate columns for dates: "Year"
+"Month" and "Day". All values for dates should be numeric. If interested in
+getting seasonal average conditions data must include a column titled Season
+and contain "spring", "summer", "fall", or "winter". Function accounts for
+geographic location when considering season based on Hemisphere of
+observation}
+
 \item{env_vars}{Character string or vector. Data will be extracted for each
 specified parameter. Options: "both", "tmp", "aridity". Mean monthly
 temperature is not available through Terra Climate. If users want to use
@@ -19,15 +28,6 @@ coordinates contained within the continental United States Years (1979-
 present). Specify "seasonal" to get monthly average variable values for the
 given season (generates 3 rows per input). Specify "yearly" to extract monthly
 average variable values for each month (generates 12 rows per input).}
-
-\item{coord_data}{Input data. Must be a dataframe containing a column titled
-"Lon" and "Lat", containing Longitude and Latitude in degrees. Depending on
-date of observation users should include 3 separate columns for dates: "Year"
-"Month" and "Day". All values for dates should be numeric. If interested in
-getting seasonal average conditions data must include a column titled Season
-and contain "spring", "summer", "fall", or "winter". Function accounts for
-geographic location when considering season based on Hemisphere of
-observation}
 }
 \value{
 A Dataframe.
@@ -35,8 +35,8 @@ A Dataframe.
 \description{
 \code{get_env_vars} Takes dataframe submitted by user and extracts envrionmental
 variable from Terra Climate. Users can specify Temperature, Aridirty, or
-both. Can extract data based on Year, Year/Month, Year/Month/Day or Season.
-Requires climateR, raster, and sf packages.
+both. Can extract data based on Year, Year and Month, Year and Month and Day
+or Season. Requires climateR, terra, and sf packages.
 }
 \examples{
 

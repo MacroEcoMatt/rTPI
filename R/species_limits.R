@@ -36,12 +36,12 @@
 #' #Specify January
 #' species_limits("Poecile atricapillus", niche_limit = "tpi", month_list=1)
 #' species_limits("Poecile atricapillus", niche_limit = "tpi", month_list="Jan")
-#'
-#' Get yearly average TPI values
-#' species_limits("Poecile atricapillus", niche_limit = "tpi", month_list=1, yr_avg=TRUE)
+#' #Get average values for year
+#' species_limits("Poecile atricapillus", niche_limit = "tpi", month_list="Jan", yr_avg=TRUE)
 #' @export
 species_limits <- function(sp_binomial, niche_limit = NULL, month_list = NULL,
                            yr_avg = FALSE){
+  MonthName <- MonthNumber <- TMax <- TMin <- AMax <- AMin <- Binomial <- NULL
   month_df <- subset(month_limits, Binomial %in% sp_binomial)
   if(nrow(month_df) == 0){
     stop ("No Binomial Matches: check species names")

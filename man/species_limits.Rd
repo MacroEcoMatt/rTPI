@@ -50,7 +50,6 @@ species_limits("Poecile atricapillus", niche_limit = "tpi")
 #Specify January
 species_limits("Poecile atricapillus", niche_limit = "tpi", month_list=1)
 species_limits("Poecile atricapillus", niche_limit = "tpi", month_list="Jan")
-
-Get yearly average TPI values
-species_limits("Poecile atricapillus", niche_limit = "tpi", month_list=1, yr_avg=TRUE)
+#Get average values for year
+species_limits("Poecile atricapillus", niche_limit = "tpi", month_list="Jan", yr_avg=TRUE)
 }

@@ -48,6 +48,8 @@
 #' @export
 highertaxa_limits <- function(taxa_code, taxa_list, niche_limit = NULL, month_list = NULL,
                               yr_avg = FALSE){
+  Class <- Family <- Genus <- MonthName <- MonthNumber <- Order <- TMax <- TMin <-
+    AMax <- AMin <- Binomial <- NULL
   if (taxa_code == "class"){
     month_df <- subset(month_limits, Class %in% taxa_list)
   } else if (taxa_code == "order"){

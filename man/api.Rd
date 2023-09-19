@@ -16,7 +16,7 @@ api(
 \arguments{
 \item{sp_df}{Input data. Must be a dataframe containing a column titled
 "Binomial" which contains genus species binomial ("Poecile atricapillus"),
-a column title "Ar" which has temperature values in degrees Celcius, and a
+a column title "Ar" which has temperature values in degrees Celsius, and a
 column titled "Month" that contains a numeric value from 1-12 or month codes
 (ex. "Jan"). If Month of observed aridity recording is unknown users may
 choose to include "Year" in the Month column which will have the function
@@ -31,7 +31,7 @@ mean aridity). Output columns for Amin = API_min, Amax = API_max,
 Ar = API_mean when ar_var = "all".}
 
 \item{use_year}{Boolean parameter, defualt FALSE. set to TURE to use yearly
-aridity tolerance limits when Month is NA}
+aridity tolerance limits instead of Monthly limits.}
 
 \item{flag_sp}{Boolean parameter, default FALSE. Set to true to add column
 to final data frame that contains TRUE values for submitted species Binomials
@@ -55,16 +55,21 @@ A Dataframe.
 \code{api()} Takes dataframe submitted by user and calculates Aridity Position
 Index. Uses species Binomial and Month to extract aridity niche limits then
 takes user submitted aridity values and calculates API using the aridity
-niche limits add a column to submitted dataframe with API values.
+niche limits add a column to submitted dataframe with API values.Aridity
+Index values cannot be calculated for snow cover, and due to some species
+ranges being completely covered in snow for some seasons, certain species
+will have values of NA returned for API calculations.These NA values indicate
+that the period of calculation is during a period with no determined
+aridity index measurement for the species range.
 }
 \examples{
 #example df:
-species_data <- data.frame(
+species_data <- <- data.frame(
                Binomial = c("Poecile atricapillus", "Poecile atricapillus"),
                Month = c(1,2),
-               AMin = c(0.2,1),
-               AMax = c(2,3),
-               Ar = c(1.5,1.6)
+               AMax = c(5,5),
+               AMin = c(2,1),
+               Ar = c(0,3)
                )
 
 #would return API for column Tm
