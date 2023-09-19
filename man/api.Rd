@@ -73,13 +73,13 @@ species_data <- <- data.frame(
                )
 
 #would return API for column Tm
-results <- api(species_data)
+api(species_data)
 
 #would return API for AMin and AMax
-results <- api(species_data, ar_var = "minmax")
+api(species_data, ar_var = "minmax")
 
 #would return API for AMin, AMax, and Ar
-results <- api(species_data, ar_var = "all", use_year = TRUE,
+api(species_data, ar_var = "all", use_year = TRUE,
                 flag_sp = TRUE, flag_month = TRUE, flag_ar = TRUE)
 
 }

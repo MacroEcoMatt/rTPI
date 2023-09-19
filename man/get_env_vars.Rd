@@ -54,5 +54,4 @@ test <- get_env_vars(df, env_vars="both", date_format="monthly")
 test <- get_env_vars(df, env_vars="tmp", date_format="yearly")
 
 test <- get_env_vars(df, env_vars="both", date_format="seasonal")
-
 }

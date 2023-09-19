@@ -57,7 +57,8 @@ Index. Uses species Binomial and Date to extract thermal niche limits and
 add a column to submitted dataframe with TPI values.
 }
 \examples{
-#example df:
+#example df
+
 species_data <- data.frame(
                Binomial = c("Poecile atricapillus", "Poecile atricapillus"),
                Month = c(1,2),

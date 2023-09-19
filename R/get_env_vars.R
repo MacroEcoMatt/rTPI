@@ -30,33 +30,28 @@
 #' @returns A Dataframe.
 #' @examples
 #'
-#'df <- data.frame(Year = c(2000,2000,2000,2000,2000,2000),
+#' df <- data.frame(Year = c(2000,2000,2000,2000,2000,2000),
 #' Month = c(6,6,6,6,6,6),
 #' Day = c(3,5,7,9,11,13),
 #' Lat = c(41.334287,41.334287,41.334287,41.334287,41.334287,41.334287),
 #' Lon = c(-77.942020,-77.942020,-77.942020,-77.942020,-77.942020,-77.942020),
 #' Season = c("spring","spring","spring","spring","spring","spring"))
 #'
-#'test <- get_env_vars(df, env_vars="aridity", date_format = "daily")
+#' test <- get_env_vars(df, env_vars="aridity", date_format = "daily")
 #'
-#'test <- get_env_vars(df, env_vars="both", date_format="monthly")
+#' test <- get_env_vars(df, env_vars="both", date_format="monthly")
 #'
-#'test <- get_env_vars(df, env_vars="tmp", date_format="yearly")
+#' test <- get_env_vars(df, env_vars="tmp", date_format="yearly")
 #'
-#'test <- get_env_vars(df, env_vars="both", date_format="seasonal")
-#'
+#' test <- get_env_vars(df, env_vars="both", date_format="seasonal")
+#' @import AOI
+#' @import climateR
+#' @import sf
+#' @import terra
+#' @import dplyr
 #' @export
 get_env_vars <- function(point_data, env_vars = "both", date_format = "monthly"){
   aoi <- date_c <- date_pet <- NULL
-  #CHECK PACKAGES
-  try(if(isFALSE(require(climateR)))stop("No package: climateR"))
-  try(if(isFALSE(require(AOI)))stop("No package: AOI"))
-  try(if(isFALSE(require(sf)))stop("No package: sf"))
-  try(if(isFALSE(require(terra)))stop("No package: terra"))
-  try(if(isFALSE(require(dplyr)))stop("No package: dplyr"))
-
-  all_packages <- c('climateR','AOI','sf', 'terra', 'dplyr')
-  invisible(lapply(all_packages, library, character.only = TRUE))
   #set up output sheet
   if(isTRUE(any(is.na(point_data$Lat))) || isTRUE(any(is.na(point_data$Lon))) ||
    isTRUE(any(point_data$Lat < -90)) || isTRUE(any(point_data$Lat > 90)) ||

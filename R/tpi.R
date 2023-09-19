@@ -40,7 +40,8 @@
 #'
 #' @returns A Dataframe.
 #' @examples
-#' #example df:
+#' #example df
+#'
 #' species_data <- data.frame(
 #'                Binomial = c("Poecile atricapillus", "Poecile atricapillus"),
 #'                Month = c(1,2),

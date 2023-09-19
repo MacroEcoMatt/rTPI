@@ -17,10 +17,10 @@ Imports:
     dplyr,
     sf,
     terra,
-    devtools,
     AOI,
     climateR
 Suggests:
+    devtools,
     testthat (>= 3.0.0),
     covr
 Remotes:

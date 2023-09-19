@@ -42,7 +42,7 @@
 #' highertaxa_limits(taxa_code = "class", taxa_list="Aves",
 #' niche_limit = "tpi", month_list="Jan")
 #'
-#' Get yearly average TPI values
+#' #Get yearly average TPI values
 #' highertaxa_limits(taxa_code = "class", taxa_list="Aves",
 #' niche_limit = "tpi", month_list="Jan", yr_avg=TRUE)
 #' @export

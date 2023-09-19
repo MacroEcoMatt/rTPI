@@ -2,5 +2,6 @@ bibentry(
   bibtype  = "Unpublished",
   author   = "Matthew Watson, Jeremy Kerr",
   title    = "Methods for Calculating Thermal and Aridity Position Index",
+  note     = "TBD",
   year     = 2023
 )

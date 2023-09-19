@@ -14,8 +14,8 @@
 #' #multiple species
 #' binomial_check(c("Poecile atricapillus","Melospiza melodia"))
 #'
-#' sp_list <- c("Poecile atricapillus","Melospiza melodia")
-#' binomial_check(sp_list)
+#' sp_data <- c("Poecile atricapillus","Melospiza melodia")
+#' binomial_check(sp_data)
 #' @export
 binomial_check <- function(sp_binomial){
   tf <- (sp_binomial %in% year_limits$Binomial)
