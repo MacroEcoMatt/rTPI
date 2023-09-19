@@ -18,13 +18,13 @@ Depends:
     terra,
     devtools,
     raster,
+    testthat (>= 3.0.0)
+Imports:
     AOI,
     climateR
-Suggests:
-    testthat (>= 3.0.0)
 Remotes:
-  mikejohnson51/climateR
-  mikejohnson51/AOI
+    mikejohnson51/climateR,
+    mikejohnson51/AOI
 License: CC BY 4.0
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
