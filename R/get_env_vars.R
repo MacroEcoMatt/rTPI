@@ -44,11 +44,7 @@
 #' test <- get_env_vars(df, env_vars="tmp", date_format="yearly")
 #'
 #' test <- get_env_vars(df, env_vars="both", date_format="seasonal")
-#' @import AOI
-#' @import climateR
-#' @import sf
 #' @import terra
-#' @import dplyr
 #' @export
 get_env_vars <- function(point_data, env_vars = "both", date_format = "monthly"){
   aoi <- date_c <- date_pet <- NULL

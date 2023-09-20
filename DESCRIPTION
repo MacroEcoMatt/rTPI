@@ -33,3 +33,4 @@ RoxygenNote: 7.2.3
 LazyData: true
 URL: https://github.com/MacroEcoMatt/rTPI
 Config/testthat/edition: 3
+Config/rcmdcheck/ignore-inconsequential-notes: true
