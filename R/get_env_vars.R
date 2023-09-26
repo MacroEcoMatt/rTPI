@@ -49,14 +49,14 @@
 #' @export
 get_env_vars <- function(point_data, env_vars = "both", date_format = "monthly"){
   aoi <- date_c <- date_pet <- NULL
-  if(any(colnames(df) %in% c("LAT","Latitude","LATITUDE"))){
-    latname<- intersect(colnames(df), c("LAT","Latitude","LATITUDE"))
-    colnames(df)[colnames(df) == latname] = c("Lat")
+  if(any(colnames(point_data) %in% c("LAT","Latitude","LATITUDE"))){
+    latname<- intersect(colnames(point_data), c("LAT","Latitude","LATITUDE"))
+    colnames(point_data)[colnames(point_data) == latname] = c("Lat")
   }
 
-  if(any(colnames(df) %in% c("LON","Longitude", "LONGITUDE"))){
-    lonname<- intersect(colnames(df), c("LON","Longitude","LONGITUDE"))
-    colnames(df)[colnames(df) == lonname] = c("Lon")
+  if(any(colnames(point_data) %in% c("LON","Longitude", "LONGITUDE"))){
+    lonname<- intersect(colnames(point_data), c("LON","Longitude","LONGITUDE"))
+    colnames(point_data)[colnames(point_data) == lonname] = c("Lon")
   }
   #set up output sheet
   if(isTRUE(any(is.na(point_data$Lat))) || isTRUE(any(is.na(point_data$Lon))) ||
