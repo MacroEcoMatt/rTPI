@@ -7,14 +7,15 @@
 get_env_vars(point_data, env_vars = "both", date_format = "monthly")
 }
 \arguments{
-\item{point_data}{Input data. Must be a dataframe containing a column titled
-"Lon" and "Lat", containing Longitude and Latitude in degrees. Depending on
-date of observation users should include 3 separate columns for dates: "Year"
-"Month" and "Day". All values for dates should be numeric. If interested in
-getting seasonal average conditions data must include a column titled Season
-and contain "spring", "summer", "fall", or "winter". Function accounts for
-geographic location when considering season based on Hemisphere of
-observation}
+\item{point_data}{Input data. Must be a dataframe containing columns titled
+"Lon" and "Lat", containing Longitude and Latitude in degrees. Will accept:
+Lat, LAT, Latitude, LATITUDE and Lon, LON, Longitude, LONGITUDE as column
+names. Depending on date of observation users should include 3 separate
+columns for dates: "Year" "Month" and "Day". All values for dates should be
+numeric. If interested in getting seasonal average conditions data must
+include a column titled Season snd contain "spring", "summer", "fall", or
+"winter". Function accounts for geographic location when considering season
+based on Hemisphere of observation.}
 
 \item{env_vars}{Character string or vector. Data will be extracted for each
 specified parameter. Options: "both", "tmp", "aridity". Mean monthly

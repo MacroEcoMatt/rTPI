@@ -5,14 +5,15 @@
 #' both. Can extract data based on Year, Year and Month, Year and Month and Day
 #' or Season. Requires climateR, terra, and sf packages.
 #'
-#' @param point_data Input data. Must be a dataframe containing a column titled
-#' "Lon" and "Lat", containing Longitude and Latitude in degrees. Depending on
-#' date of observation users should include 3 separate columns for dates: "Year"
-#' "Month" and "Day". All values for dates should be numeric. If interested in
-#' getting seasonal average conditions data must include a column titled Season
-#' and contain "spring", "summer", "fall", or "winter". Function accounts for
-#' geographic location when considering season based on Hemisphere of
-#' observation
+#' @param point_data Input data. Must be a dataframe containing columns titled
+#' "Lon" and "Lat", containing Longitude and Latitude in degrees. Will accept:
+#' Lat, LAT, Latitude, LATITUDE and Lon, LON, Longitude, LONGITUDE as column
+#' names. Depending on date of observation users should include 3 separate
+#' columns for dates: "Year" "Month" and "Day". All values for dates should be
+#' numeric. If interested in getting seasonal average conditions data must
+#' include a column titled Season snd contain "spring", "summer", "fall", or
+#' "winter". Function accounts for geographic location when considering season
+#' based on Hemisphere of observation.
 #'
 #' @param env_vars Character string or vector. Data will be extracted for each
 #' specified parameter. Options: "both", "tmp", "aridity". Mean monthly
@@ -48,6 +49,15 @@
 #' @export
 get_env_vars <- function(point_data, env_vars = "both", date_format = "monthly"){
   aoi <- date_c <- date_pet <- NULL
+  if(any(colnames(df) %in% c("LAT","Latitude","LATITUDE"))){
+    latname<- intersect(colnames(df), c("LAT","Latitude","LATITUDE"))
+    colnames(df)[colnames(df) == latname] = c("Lat")
+  }
+
+  if(any(colnames(df) %in% c("LON","Longitude", "LONGITUDE"))){
+    lonname<- intersect(colnames(df), c("LON","Longitude","LONGITUDE"))
+    colnames(df)[colnames(df) == lonname] = c("Lon")
+  }
   #set up output sheet
   if(isTRUE(any(is.na(point_data$Lat))) || isTRUE(any(is.na(point_data$Lon))) ||
    isTRUE(any(point_data$Lat < -90)) || isTRUE(any(point_data$Lat > 90)) ||
@@ -55,10 +65,10 @@ get_env_vars <- function(point_data, env_vars = "both", date_format = "monthly")
     stop("Error in Latitude and Longitude: NA present or impossible values")
   }
   ifelse(env_vars == "tmp",
-         point_data[,c("tmin","tmax")] <- NA,
+         point_data[,c("TMin","TMax")] <- NA,
          ifelse(env_vars=="aridity",
-                point_data[,c("pet","ppt","aridity")] <- NA,
-                point_data[,c("tmin","tmax","pet","ppt","aridity")] <- NA))
+                point_data[,c("pet","ppt","Ar")] <- NA,
+                point_data[,c("TMin","TMax","pet","ppt","Ar")] <- NA))
 
   #get environmental variables
   if(date_format == "monthly"){
@@ -88,12 +98,12 @@ get_env_vars <- function(point_data, env_vars = "both", date_format = "monthly")
         tmax <-climateR::extract_sites(r = tmpdata[3], pts = df_coords[as.numeric(row),], id = "CODE")
         tmin <- climateR::extract_sites(r = tmpdata[4], pts = df_coords[as.numeric(row),], id = "CODE")
 
-        point_data[row, "tmin"] <- as.numeric(tmin[[1]][2])
-        point_data[row, "tmax"] <- as.numeric(tmax[[1]][2])
+        point_data[row, "TMin"] <- as.numeric(tmin[[1]][2])
+        point_data[row, "TMax"] <- as.numeric(tmax[[1]][2])
         point_data[row, "pet"] <- pet[[1]][2]
         point_data[row, "ppt"] <- ppt[[1]][2]
 
-        point_data[row, "aridity"] <- as.numeric(ifelse(is.na(pet[[1]][2]), NA,
+        point_data[row, "Ar"] <- as.numeric(ifelse(is.na(pet[[1]][2]), NA,
                                                           ifelse(pet[[1]][2] == 0, NA,
                                                                  ifelse(ppt[[1]][2]/pet[[1]][2] >100, 100,
                                                                         ppt[[1]][2]/pet[[1]][2]))))
@@ -113,8 +123,8 @@ get_env_vars <- function(point_data, env_vars = "both", date_format = "monthly")
         tmax <-climateR::extract_sites(r = tmpdata[1], pts = df_coords[as.numeric(row),], id = "CODE")
         tmin <- climateR::extract_sites(r = tmpdata[2], pts = df_coords[as.numeric(row),], id = "CODE")
 
-        point_data[row, "tmin"] <- as.numeric(tmin[[1]][2])
-        point_data[row, "tmax"] <- as.numeric(tmax[[1]][2])
+        point_data[row, "TMin"] <- as.numeric(tmin[[1]][2])
+        point_data[row, "TMax"] <- as.numeric(tmax[[1]][2])
       }
     } else if (env_vars=="aridity"){
       for(row in 1:nrow(point_data)){
@@ -134,7 +144,7 @@ get_env_vars <- function(point_data, env_vars = "both", date_format = "monthly")
         point_data[row, "pet"] <- pet[[1]][2]
         point_data[row, "ppt"] <- ppt[[1]][2]
 
-        point_data[row, "aridity"] <- as.numeric(ifelse(is.na(pet[[1]][2]), NA,
+        point_data[row, "Ar"] <- as.numeric(ifelse(is.na(pet[[1]][2]), NA,
                                                         ifelse(pet[[1]][2] == 0, NA,
                                                                ifelse(ppt[[1]][2]/pet[[1]][2] >100, 100,
                                                                       ppt[[1]][2]/pet[[1]][2]))))
@@ -173,12 +183,12 @@ get_env_vars <- function(point_data, env_vars = "both", date_format = "monthly")
         tmax <-climateR::extract_sites(r = tmpdata[3], pts = df_coords[as.numeric(row),], id = "CODE")
         tmin <- climateR::extract_sites(r = tmpdata[4], pts = df_coords[as.numeric(row),], id = "CODE")
 
-        point_data[row, "tmin"] <- as.numeric(tmin[[1]][2])
-        point_data[row, "tmax"] <- as.numeric(tmax[[1]][2])
+        point_data[row, "TMin"] <- as.numeric(tmin[[1]][2])
+        point_data[row, "TMax"] <- as.numeric(tmax[[1]][2])
         point_data[row, "pet"] <- pet[[1]][2]
         point_data[row, "ppt"] <- ppt[[1]][2]
 
-        point_data[row, "aridity"] <- as.numeric(ifelse(is.na(pet[[1]][2]), NA,
+        point_data[row, "Ar"] <- as.numeric(ifelse(is.na(pet[[1]][2]), NA,
                                                         ifelse(pet[[1]][2] == 0, NA,
                                                                ifelse(ppt[[1]][2]/pet[[1]][2] >100, 100,
                                                                       ppt[[1]][2]/pet[[1]][2]))))
@@ -199,8 +209,8 @@ get_env_vars <- function(point_data, env_vars = "both", date_format = "monthly")
         tmax <-climateR::extract_sites(r = tmpdata[1], pts = df_coords[as.numeric(row),], id = "CODE")
         tmin <- climateR::extract_sites(r = tmpdata[2], pts = df_coords[as.numeric(row),], id = "CODE")
 
-        point_data[row, "tmin"] <- as.numeric(tmin[[1]][2])
-        point_data[row, "tmax"] <- as.numeric(tmax[[1]][2])
+        point_data[row, "TMin"] <- as.numeric(tmin[[1]][2])
+        point_data[row, "TMax"] <- as.numeric(tmax[[1]][2])
       }
     } else if (env_vars=="aridity"){
       for(row in 1:nrow(point_data)){
@@ -221,7 +231,7 @@ get_env_vars <- function(point_data, env_vars = "both", date_format = "monthly")
         point_data[row, "pet"] <- pet[[1]][2]
         point_data[row, "ppt"] <- ppt[[1]][2]
 
-        point_data[row, "aridity"] <- as.numeric(ifelse(is.na(pet[[1]][2]), NA,
+        point_data[row, "Ar"] <- as.numeric(ifelse(is.na(pet[[1]][2]), NA,
                                                         ifelse(pet[[1]][2] == 0, NA,
                                                                ifelse(ppt[[1]][2]/pet[[1]][2] >100, 100,
                                                                       ppt[[1]][2]/pet[[1]][2]))))
@@ -267,12 +277,12 @@ get_env_vars <- function(point_data, env_vars = "both", date_format = "monthly")
         tmax <-climateR::extract_sites(r = tmpdata[3], pts = df_coords[as.numeric(row),], id = "CODE")
         tmin <- climateR::extract_sites(r = tmpdata[4], pts = df_coords[as.numeric(row),], id = "CODE")
 
-        point_data[row, "tmin"] <- as.numeric(tmin[[1]][2])
-        point_data[row, "tmax"] <- as.numeric(tmax[[1]][2])
+        point_data[row, "TMin"] <- as.numeric(tmin[[1]][2])
+        point_data[row, "TMax"] <- as.numeric(tmax[[1]][2])
         point_data[row, "pet"] <- pet[[1]][2]
         point_data[row, "ppt"] <- ppt[[1]][2]
 
-        point_data[row, "aridity"] <- as.numeric(ifelse(is.na(pet[[1]][2]), NA,
+        point_data[row, "Ar"] <- as.numeric(ifelse(is.na(pet[[1]][2]), NA,
                                                         ifelse(pet[[1]][2] == 0, NA,
                                                                ifelse(ppt[[1]][2]/pet[[1]][2] >100, 100,
                                                                       ppt[[1]][2]/pet[[1]][2]))))
@@ -293,8 +303,8 @@ get_env_vars <- function(point_data, env_vars = "both", date_format = "monthly")
         tmax <-climateR::extract_sites(r = tmpdata[1], pts = df_coords[as.numeric(row),], id = "CODE")
         tmin <- climateR::extract_sites(r = tmpdata[2], pts = df_coords[as.numeric(row),], id = "CODE")
 
-        point_data[row, "tmin"] <- as.numeric(tmin[[1]][2])
-        point_data[row, "tmax"] <- as.numeric(tmax[[1]][2])
+        point_data[row, "TMin"] <- as.numeric(tmin[[1]][2])
+        point_data[row, "TMax"] <- as.numeric(tmax[[1]][2])
       }
     } else if (env_vars=="aridity"){
       for(row in 1:nrow(point_data)){
@@ -315,7 +325,7 @@ get_env_vars <- function(point_data, env_vars = "both", date_format = "monthly")
         point_data[row, "pet"] <- pet[[1]][2]
         point_data[row, "ppt"] <- ppt[[1]][2]
 
-        point_data[row, "aridity"] <- as.numeric(ifelse(is.na(pet[[1]][2]), NA,
+        point_data[row, "Ar"] <- as.numeric(ifelse(is.na(pet[[1]][2]), NA,
                                                         ifelse(pet[[1]][2] == 0, NA,
                                                                ifelse(ppt[[1]][2]/pet[[1]][2] >100, 100,
                                                                       ppt[[1]][2]/pet[[1]][2]))))
@@ -358,12 +368,12 @@ get_env_vars <- function(point_data, env_vars = "both", date_format = "monthly")
         tmax <-climateR::extract_sites(r = tmpdata[3], pts = df_coords[as.numeric(row),], id = "CODE")
         tmin <- climateR::extract_sites(r = tmpdata[2], pts = df_coords[as.numeric(row),], id = "CODE")
 
-        point_data[row, "tmin"] <- as.numeric(tmin[[1]][2] - 273.15)
-        point_data[row, "tmax"] <- as.numeric(tmax[[1]][2] - 273.15)
+        point_data[row, "TMin"] <- as.numeric(tmin[[1]][2] - 273.15)
+        point_data[row, "TMax"] <- as.numeric(tmax[[1]][2] - 273.15)
         point_data[row, "pet"] <- pet[[1]][2]
         point_data[row, "ppt"] <- ppt[[1]][2]
 
-        point_data[row, "aridity"] <- as.numeric(ifelse(is.na(pet[[1]][2]), NA,
+        point_data[row, "Ar"] <- as.numeric(ifelse(is.na(pet[[1]][2]), NA,
                                                         ifelse(pet[[1]][2] == 0, NA,
                                                                ifelse(ppt[[1]][2]/pet[[1]][2] >100, 100,
                                                                       ppt[[1]][2]/pet[[1]][2]))))
@@ -386,8 +396,8 @@ get_env_vars <- function(point_data, env_vars = "both", date_format = "monthly")
         tmax <-climateR::extract_sites(r = tmpdata[2], pts = df_coords[as.numeric(row),], id = "CODE")
         tmin <- climateR::extract_sites(r = tmpdata[1], pts = df_coords[as.numeric(row),], id = "CODE")
 
-        point_data[row, "tmmn"] <- as.numeric(tmin[[1]][2] - 273.15)
-        point_data[row, "tmmx"] <- as.numeric(tmax[[1]][2] - 273.15)
+        point_data[row, "TMin"] <- as.numeric(tmin[[1]][2] - 273.15)
+        point_data[row, "TMax"] <- as.numeric(tmax[[1]][2] - 273.15)
       }
     } else if (env_vars=="aridity"){
       for(row in 1:nrow(point_data)){
@@ -414,7 +424,7 @@ get_env_vars <- function(point_data, env_vars = "both", date_format = "monthly")
         point_data[row, "pet"] <- pet[[1]][2]
         point_data[row, "ppt"] <- ppt[[1]][2]
 
-        point_data[row, "aridity"] <- as.numeric(ifelse(is.na(pet[[1]][2]), NA,
+        point_data[row, "Ar"] <- as.numeric(ifelse(is.na(pet[[1]][2]), NA,
                                                         ifelse(pet[[1]][2] == 0, NA,
                                                                ifelse(ppt[[1]][2]/pet[[1]][2] >100, 100,
                                                                       ppt[[1]][2]/pet[[1]][2]))))

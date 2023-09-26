@@ -247,6 +247,14 @@ df3 <- data.frame(Year = c(2000,2001,2002,2003),
                  Lat = c(41.334287,41.334287,41.334287,41.334287),
                  Lon = c(-77.942020,-77.942020,-77.942020,-77.942020),
                  Season = c("spring","summer","fall","winter"))
+
+df4 <- data.frame(Year = c(2000),
+                  Month = c(6),
+                  Day = c(3),
+                  LAT = c(41.334287),
+                  LONGITUDE = c(-77.942020),
+                  Season = c("spring"))
+
 #TEST FUNCTION get_env_vars
 test_that("Check to ensure that variables are extracted appropriately",{
   expect_no_error(get_env_vars(df3, env_vars="aridity", date_format = "daily"))
@@ -267,7 +275,7 @@ test_that("Check to ensure that variables are extracted appropriately",{
   expect_error(get_env_vars(df, env_vars="bh", date_format = "seasonal"))
   expect_error(get_env_vars(df, env_vars="both", date_format = "sl"))
   expect_error(get_env_vars(df2, env_vars="both", date_format = "seasonal"))
-
+  expect_no_error(get_env_vars(df4, env_vars="tmp", date_format = "monthly"))
 })
 
 splist <- c("Poecile atricapillus", "Parus atricapillus","ile atricapillus")
