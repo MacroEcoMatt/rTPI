@@ -42,9 +42,6 @@
 #' highertaxa_limits(taxa_code = "class", taxa_list="Aves",
 #' niche_limit = "tpi", month_list="Jan")
 #'
-#' #Get yearly average TPI values
-#' highertaxa_limits(taxa_code = "class", taxa_list="Aves",
-#' niche_limit = "tpi", month_list="Jan", yr_avg=TRUE)
 #' @export
 highertaxa_limits <- function(taxa_code, taxa_list, niche_limit = NULL, month_list = NULL,
                               yr_avg = FALSE){

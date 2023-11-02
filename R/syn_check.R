@@ -35,6 +35,7 @@
 #'
 #' @export
 syn_check <- function(binomial_list){
+  Synonym <- IUCN_Binomial <- NULL
 
   User_Submitted <- unique(binomial_list)
   Matching_Binomial <- unique(binomial_list)
