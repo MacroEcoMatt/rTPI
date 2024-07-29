@@ -2,9 +2,8 @@
 
 export(api)
 export(binomial_check)
-export(get_env_vars)
 export(highertaxa_limits)
 export(species_limits)
 export(syn_check)
 export(tpi)
-import(terra)
+importFrom(stats,na.omit)

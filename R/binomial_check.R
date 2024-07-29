@@ -18,7 +18,7 @@
 #' binomial_check(sp_data)
 #' @export
 binomial_check <- function(sp_binomial){
-  tf <- (sp_binomial %in% year_limits$Binomial)
+  tf <- (sp_binomial %in% yearly_limits$Binomial)
   Found <- as.vector(tf)
   Submitted_Binomial <- as.vector(sp_binomial)
   return(cbind(Submitted_Binomial,Found))

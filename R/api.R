@@ -21,9 +21,9 @@
 #' @param ar_var Input string. Defaults to NULL which informs function to
 #' calculate API for column titled "Ar". Options: "minmax", "all".
 #' "minmax" indicates user has two columns with aridity data, one should be
-#' titled "Amin", the other "Amax". "all" indicates user has three columns with
-#' aridity data, should be titled "Amin", "Amax", and "Ar" ("Ar" indicating
-#' mean aridity). Output columns for Amin = API_min, Amax = API_max,
+#' titled "amin", the other "amax". "all" indicates user has three columns with
+#' aridity data, should be titled "amin", "amax", and "Ar" ("Ar" indicating
+#' mean aridity). Output columns for amin = API_min, amax = API_max,
 #' Ar = API_mean when ar_var = "all".
 #'
 #' @param use_year Boolean parameter, defualt FALSE. set to TURE to use yearly
@@ -50,41 +50,53 @@
 #' species_data <-data.frame(
 #'                Binomial = c("Poecile atricapillus", "Poecile atricapillus"),
 #'                Month = c(1,2),
-#'                AMax = c(5,5),
-#'                AMin = c(2,1),
+#'                amax = c(5,5),
+#'                amin = c(2,1),
 #'                Ar = c(0,3)
 #'                )
 #'
-#' #would return API for column Tm
+#' #would return API for column Ar
 #' api(species_data)
 #'
-#' #would return API for AMin and AMax
+#' #would return API for anin and anax
 #' api(species_data, ar_var = "minmax")
 #'
-#' #would return API for AMin, AMax, and Ar
+#' #would return API for anin, anax, and Ar
 #' api(species_data, ar_var = "all", use_year = TRUE,
 #'                 flag_sp = TRUE, flag_month = TRUE, flag_ar = TRUE)
 #'
 #' @export
 api <- function(sp_df, ar_var = NULL, use_year = FALSE, flag_sp = FALSE,
                 flag_month = FALSE, flag_ar = FALSE){
-  ############NULL###############
+  Month<- AMax<- AMin<- API<- API_max<- API_mean<- API_min<- Ar<-amax <- amin <- NULL
+
+  if(any(sp_df$Month %in% as.character(c(1:12))) &&
+     any(sp_df$Month %in% month.abb[1:12])){
+    stop("Month values are inconsistent: Months cannont contain 3 letter month codes and numeric values")
+  }
+
+  if (!is.null(ar_var) && !ar_var == "all" && !ar_var == "minmax"){
+    stop("ar_var is out of range")
+  }
+
   if(is.null(ar_var) && isTRUE(any(sp_df$Ar < 0))){
     stop("Error: Ar values must be 0 or greater; Some Ar values are negative")
   } else if(ar_var == "all" && isTRUE(any(sp_df$Ar < 0)) ||
-            ar_var == "all" && isTRUE(any(sp_df$AMax < 0)) ||
-            ar_var == "all" && isTRUE(any(sp_df$AMin < 0))){
-    stop("Error: Ar,AMin,AMax values must be 0 or greater; Some values are negative")
-  } else if (ar_var == "minmax" && isTRUE(any(sp_df$AMax < 0)) ||
-             ar_var == "minmax" && isTRUE(any(sp_df$AMin < 0))){
-    stop("Error: AMin,AMax values must be 0 or greater; Some values are negative")
+            ar_var == "all" && isTRUE(any(sp_df$amax < 0)) ||
+            ar_var == "all" && isTRUE(any(sp_df$amin < 0))){
+    stop("Error: Ar, amin, amax values must be 0 or greater; Some values are negative")
+  } else if (ar_var == "minmax" && isTRUE(any(sp_df$amax < 0)) ||
+             ar_var == "minmax" && isTRUE(any(sp_df$amin < 0))){
+    stop("Error: amin, amax values must be 0 or greater; Some values are negative")
   }
+
+  ############NULL###############
   if (is.null(ar_var)){
     API_OUTPUT <- sp_df
     API_OUTPUT$API <- NA
 
     if (isTRUE(flag_sp)){
-      API_OUTPUT$BINOMIALS_MATCH <- (API_OUTPUT$Binomial %in% year_limits$Binomial)
+      API_OUTPUT$BINOMIALS_MATCH <- (API_OUTPUT$Binomial %in% yearly_limits$Binomial)
     }
     if (isTRUE(flag_month)){
       for (nr in 1:nrow(API_OUTPUT)){
@@ -103,94 +115,67 @@ api <- function(sp_df, ar_var = NULL, use_year = FALSE, flag_sp = FALSE,
     if (isTRUE(flag_ar)){
       API_OUTPUT$Flag_Ar <- (!is.na(API_OUTPUT$Ar))
     }
+    if(isTRUE(use_year)){
+      API_OUTPUT <- dplyr::left_join(API_OUTPUT,yearly_limits[,c(6,9:10)])
 
-    for (row in 1:nrow(API_OUTPUT)){
-      mnth <- API_OUTPUT$Month[[row]]
+      API_OUTPUT <- dplyr::mutate(API_OUTPUT,
+                                  API = (Ar-AMin)/(AMax-AMin))
 
-      if (isTRUE(use_year)){
-        ar <- API_OUTPUT[row, "Ar"]
-        AMinimum <- year_limits[year_limits$Binomial %in%
-                                  API_OUTPUT[row,"Binomial"], "AMin"]
-        AMaximum <- year_limits[year_limits$Binomial %in%
-                                  API_OUTPUT[row,"Binomial"], "AMax"]
-        if (length(AMinimum) > 0 && length(AMaximum) > 0){
-          API_OUTPUT[row,"API"] <-
-            as.numeric(signif((ar-AMinimum)/(AMaximum-AMinimum)),digits = 6)
-        } else {
-          API_OUTPUT[row,"API"] <- NA
-        }
-      } else {
-        if (is.na(mnth)){
-          API_OUTPUT[row,"API"] <- NA
-        } else if (is.numeric(mnth) && mnth %in% c(1:12)){
-          ar <- API_OUTPUT[row, "Ar"]
-          AMinimum <- month_limits[month_limits$Binomial %in%
-                                     API_OUTPUT[row,"Binomial"] &
-                                     month_limits$MonthNumber == mnth, "AMin"]
-          AMaximum <- month_limits[month_limits$Binomial %in%
-                                     API_OUTPUT[row,"Binomial"] &
-                                     month_limits$MonthNumber == mnth, "AMax"]
-          if (length(AMinimum) > 0 && length(AMaximum) > 0){
-            API_OUTPUT[row,"API"] <-
-              as.numeric(signif((ar-AMinimum)/(AMaximum-AMinimum)),digits = 6)
-          } else {
-            API_OUTPUT[row,"API"] <- NA
-          }
-        } else if (is.character(mnth) && mnth %in% month.abb[1:12]){
-          ar <- API_OUTPUT[row, "Ar"]
-          AMinimum <- month_limits[month_limits$Binomial %in%
-                                     API_OUTPUT[row,"Binomial"] &
-                                     month_limits$MonthName == mnth, "AMin"]
-          AMaximum <- month_limits[month_limits$Binomial %in%
-                                     API_OUTPUT[row,"Binomial"] &
-                                     month_limits$MonthName == mnth, "AMax"]
-          if (length(AMinimum) > 0 && length(AMaximum) > 0){
-            API_OUTPUT[row,"API"] <-
-              as.numeric(signif((ar-AMinimum)/(AMaximum-AMinimum)),digits = 6)
-          } else {
-            API_OUTPUT[row,"API"] <- NA
-          }
-        } else if (is.character(mnth) && mnth %in% as.character(c(1:12))){
-          ar <- API_OUTPUT[row, "Ar"]
-          mnth <- as.numeric(mnth)
-          AMinimum <- month_limits[month_limits$Binomial %in%
-                                     API_OUTPUT[row,"Binomial"] &
-                                     month_limits$MonthNumber == mnth, "AMin"]
-          AMaximum <- month_limits[month_limits$Binomial %in%
-                                     API_OUTPUT[row,"Binomial"] &
-                                     month_limits$MonthNumber == mnth, "AMax"]
-          if (length(AMinimum) > 0 && length(AMaximum) > 0){
-            API_OUTPUT[row,"API"] <-
-              as.numeric(signif((ar-AMinimum)/(AMaximum-AMinimum)),digits = 6)
-          } else {
-            API_OUTPUT[row,"API"] <- NA
-          }
-        }else if (is.character(mnth) && mnth=="Year"){
-          ar <- API_OUTPUT[row, "Ar"]
-          AMinimum <- year_limits[year_limits$Binomial %in%
-                                    API_OUTPUT[row,"Binomial"], "AMin"]
-          AMaximum <- year_limits[year_limits$Binomial %in%
-                                    API_OUTPUT[row,"Binomial"], "AMax"]
-          if (length(AMinimum) > 0 && length(AMaximum) > 0){
-            API_OUTPUT[row,"API"] <-
-              as.numeric(signif((ar-AMinimum)/(AMaximum-AMinimum)),digits = 6)
-          } else {
-            API_OUTPUT[row,"API"] <- NA
-          }
-        } else {
-          API_OUTPUT[row,"API"] <- NA
-        }
+      API_OUTPUT <- subset(API_OUTPUT,select = -c(AMin,AMax))
+    }else{
+      if(is.numeric(API_OUTPUT$Month)){
+        mnth_lim <- month_limits[,c(6,9:11)]
+        colnames(mnth_lim)<-c("Binomial","AMin","AMax","Month")
+
+        API_OUTPUT <- dplyr::left_join(API_OUTPUT,mnth_lim)
+        API_OUTPUT <- dplyr::mutate(API_OUTPUT,
+                                    API = (Ar-AMin)/(AMax-AMin))
+        API_OUTPUT <- subset(API_OUTPUT,select = -c(AMin,AMax))
+
+      }else if (is.character(API_OUTPUT$Month) && any(API_OUTPUT$Month %in% month.abb[1:12])){
+        mnth_lim <- month_limits[,c(6,9:10,12)]
+        colnames(mnth_lim)<-c("Binomial","AMin","AMax","Month")
+        mnth_lim$Month <- as.character(mnth_lim$Month)
+
+        API_OUTPUT <- dplyr::left_join(API_OUTPUT,mnth_lim)
+        API_OUTPUT <- dplyr::mutate(API_OUTPUT,
+                                    API = (Ar-AMin)/(AMax-AMin))
+        API_OUTPUT <- subset(API_OUTPUT,select = -c(AMin,AMax))
+
+      }else if (is.character(API_OUTPUT$Month) && any(API_OUTPUT$Month %in% as.character(c(1:12)))){
+        mnth_lim <- month_limits[,c(6,9:11)]
+        colnames(mnth_lim)<-c("Binomial","AMin","AMax","Month")
+        mnth_lim$Month <- as.character(mnth_lim$Month)
+
+        API_OUTPUT <- dplyr::left_join(API_OUTPUT,mnth_lim)
+        API_OUTPUT <- dplyr::mutate(API_OUTPUT,
+                                    API = (Ar-AMin)/(AMax-AMin))
+        API_OUTPUT <- subset(API_OUTPUT,select = -c(AMin,AMax))
+      }else{
+        stop("Month values are incorrectly specified. Month should be reported numerically or as characters 1:12 or
+           as three letter characters Jan:Dec")
       }
+      if(any(na.omit(API_OUTPUT$Month =="Year"))){
+        API_Year <- API_OUTPUT[API_OUTPUT$Month %in% "Year",]
+        API_Year <- subset(API_Year,select = -c(API))
+
+        API_Year <-  dplyr::left_join(API_Year,yearly_limits[,c(6,9:10)])
+        API_Year <- dplyr::mutate(API_Year,
+                                  API = (Ar-AMin)/(AMax-AMin))
+        API_Year <- subset(API_Year,select = -c(AMin,AMax))
+
+        API_Month <- API_OUTPUT[!API_OUTPUT$Month %in% "Year",]
+        API_OUTPUT <- rbind(API_Month,API_Year)
+      }
+
     }
-    out_of_range <- API_OUTPUT[is.na(API_OUTPUT$API),"API"]
-    if(length(out_of_range) > 0){
+
+    if(any(is.na(API_OUTPUT$API))){
       warning("Some rows contained innaccurate information for species name,
-            month or Ar. Rows with this type of error had API propogated
-            with NA")
-      return(API_OUTPUT)
-    } else {
-      return(API_OUTPUT)
-    }
+            month or Ar. Rows with this type of error had the API propogated
+            with NA")}
+    return(API_OUTPUT)
+
   }
   ############MINMAX###############
   else if (ar_var == "minmax"){
@@ -199,7 +184,7 @@ api <- function(sp_df, ar_var = NULL, use_year = FALSE, flag_sp = FALSE,
     API_OUTPUT$API_max <- NA
 
     if (isTRUE(flag_sp)){
-      API_OUTPUT$BINOMIALS_MATCH <- (API_OUTPUT$Binomial %in% year_limits$Binomial)
+      API_OUTPUT$BINOMIALS_MATCH <- (API_OUTPUT$Binomial %in% yearly_limits$Binomial)
     }
     if (isTRUE(flag_month)){
       for (nr in 1:nrow(API_OUTPUT)){
@@ -216,130 +201,89 @@ api <- function(sp_df, ar_var = NULL, use_year = FALSE, flag_sp = FALSE,
       }
     }
     if (isTRUE(flag_ar)){
-      API_OUTPUT$Flag_AMin <- (!is.na(API_OUTPUT$AMin))
-      API_OUTPUT$Flag_AMax <- (!is.na(API_OUTPUT$AMax))
+      API_OUTPUT$Flag_AMin <- (!is.na(API_OUTPUT$amin))
+      API_OUTPUT$Flag_AMax <- (!is.na(API_OUTPUT$amax))
     }
-    for (row in 1:nrow(API_OUTPUT)){
-      mnth <- API_OUTPUT[row,"Month"]
+    if(isTRUE(use_year)){
+      API_OUTPUT <- dplyr::left_join(API_OUTPUT,yearly_limits[,c(6,9,10)])
 
-      if (isTRUE(use_year)){
-        amin <- API_OUTPUT[row, "AMin"]
-        amax <- API_OUTPUT[row, "AMax"]
+      API_OUTPUT <- dplyr::mutate(API_OUTPUT,
+                                  API_min = (amin-AMin)/(AMax-AMin),
+                                  API_max = (amax-AMin)/(AMax-AMin))
 
-        AMinimum <- year_limits[year_limits$Binomial %in%
-                                  API_OUTPUT[row,"Binomial"], "AMin"]
-        AMaximum <- year_limits[year_limits$Binomial %in%
-                                  API_OUTPUT[row,"Binomial"], "AMax"]
+      API_OUTPUT <- subset(API_OUTPUT,select = -c(AMin,AMax))
 
-        if (length(AMinimum) > 0 && length(AMaximum) > 0){
-          API_OUTPUT[row,"API_min"] <-
-            as.numeric(signif((amin-AMinimum)/(AMaximum-AMinimum)),digits = 6)
-          API_OUTPUT[row,"API_max"] <-
-            as.numeric(signif((amax-AMinimum)/(AMaximum-AMinimum)),digits = 6)
-        } else {
-          API_OUTPUT[row,"API_min"] <- NA
-          API_OUTPUT[row,"API_max"] <- NA
-        }
-      } else {
-        if (is.na(mnth)){
-          API_OUTPUT[row,"API_min"] <- NA
-          API_OUTPUT[row,"API_max"] <- NA
-        } else if (is.numeric(mnth) && mnth %in% c(1:12)){
-          amin <- API_OUTPUT[row, "AMin"]
-          amax <- API_OUTPUT[row, "AMax"]
-          AMinimum <- month_limits[month_limits$Binomial %in%
-                                     API_OUTPUT[row,"Binomial"] &
-                                     month_limits$MonthNumber == mnth, "AMin"]
-          AMaximum <- month_limits[month_limits$Binomial %in%
-                                     API_OUTPUT[row,"Binomial"] &
-                                     month_limits$MonthNumber == mnth, "AMax"]
-          if (length(AMinimum) > 0 && length(AMaximum) > 0){
-            API_OUTPUT[row,"API_min"] <-
-              as.numeric(signif((amin-AMinimum)/(AMaximum-AMinimum)),digits = 6)
-            API_OUTPUT[row,"API_max"] <-
-              as.numeric(signif((amax-AMinimum)/(AMaximum-AMinimum)),digits = 6)
-          } else {
-            API_OUTPUT[row,"API_min"] <- NA
-            API_OUTPUT[row,"API_max"] <- NA
-          }
-        } else if (is.character(mnth) && mnth %in% month.abb[1:12]){
-          amin <- API_OUTPUT[row, "AMin"]
-          amax <- API_OUTPUT[row, "AMax"]
-          AMinimum <- month_limits[month_limits$Binomial %in%
-                                     API_OUTPUT[row,"Binomial"] &
-                                     month_limits$MonthName == mnth, "AMin"]
-          AMaximum <- month_limits[month_limits$Binomial %in%
-                                     API_OUTPUT[row,"Binomial"] &
-                                     month_limits$MonthName == mnth, "AMax"]
-          if (length(AMinimum) > 0 && length(AMaximum) > 0){
-            API_OUTPUT[row,"API_min"] <-
-              as.numeric(signif((amin-AMinimum)/(AMaximum-AMinimum)),digits = 6)
-            API_OUTPUT[row,"API_max"] <-
-              as.numeric(signif((amax-AMinimum)/(AMaximum-AMinimum)),digits = 6)
-          } else {
-            API_OUTPUT[row,"API_min"] <- NA
-            API_OUTPUT[row,"API_max"] <- NA
-          }
-        } else if (is.character(mnth) && mnth %in% as.character(c(1:12))){
-          mnth <- as.numeric(mnth)
-          amin <- API_OUTPUT[row, "AMin"]
-          amax <- API_OUTPUT[row, "AMax"]
-          AMinimum <- month_limits[month_limits$Binomial %in%
-                                     API_OUTPUT[row,"Binomial"] &
-                                     month_limits$MonthNumber == mnth, "AMin"]
-          AMaximum <- month_limits[month_limits$Binomial %in%
-                                     API_OUTPUT[row,"Binomial"] &
-                                     month_limits$MonthNumber == mnth, "AMax"]
-          if (length(AMinimum) > 0 && length(AMaximum) > 0){
-            API_OUTPUT[row,"API_min"] <-
-              as.numeric(signif((amin-AMinimum)/(AMaximum-AMinimum)),digits = 6)
-            API_OUTPUT[row,"API_max"] <-
-              as.numeric(signif((amax-AMinimum)/(AMaximum-AMinimum)),digits = 6)
-          } else {
-            API_OUTPUT[row,"API_min"] <- NA
-            API_OUTPUT[row,"API_max"] <- NA
-          }
-        } else if (is.character(mnth) && mnth=="Year"){
-          amin <- API_OUTPUT[row, "AMin"]
-          amax <- API_OUTPUT[row, "AMax"]
-          AMinimum <- year_limits[year_limits$Binomial %in%
-                                    API_OUTPUT[row,"Binomial"], "AMin"]
-          AMaximum <- year_limits[year_limits$Binomial %in%
-                                    API_OUTPUT[row,"Binomial"], "AMax"]
-          if (length(AMinimum) > 0 && length(AMaximum) > 0){
-            API_OUTPUT[row,"API_min"] <-
-              as.numeric(signif((amin-AMinimum)/(AMaximum-AMinimum)),digits = 6)
-            API_OUTPUT[row,"API_max"] <-
-              as.numeric(signif((amax-AMinimum)/(AMaximum-AMinimum)),digits = 6)
-          } else {
-            API_OUTPUT[row,"API_min"] <- NA
-            API_OUTPUT[row,"API_max"] <- NA
-          }
-        } else {
-          API_OUTPUT[row,"API_min"] <- NA
-          API_OUTPUT[row, "API_max"] <- NA
-        }
+    }else{
+      if(is.numeric(API_OUTPUT$Month)){
+        mnth_lim <- month_limits[,c(6,9,10,11)]
+        colnames(mnth_lim)<-c("Binomial","AMin","AMax","Month")
+
+        API_OUTPUT <- dplyr::left_join(API_OUTPUT,mnth_lim)
+
+        API_OUTPUT <- dplyr::mutate(API_OUTPUT,
+                                    API_min = (amin-AMin)/(AMax-AMin),
+                                    API_max = (amax-AMin)/(AMax-AMin))
+
+        API_OUTPUT <- subset(API_OUTPUT,select = -c(AMin,AMax))
+
+      }else if (is.character(API_OUTPUT$Month) && any(API_OUTPUT$Month%in% month.abb[1:12])){
+        mnth_lim <- month_limits[,c(6,9,10,12)]
+        colnames(mnth_lim)<-c("Binomial","AMin","AMax","Month")
+
+        API_OUTPUT <- dplyr::left_join(API_OUTPUT,mnth_lim)
+        API_OUTPUT <- dplyr::mutate(API_OUTPUT,
+                                    API_min = (amin-AMin)/(AMax-AMin),
+                                    API_max = (amax-AMin)/(AMax-AMin))
+
+        API_OUTPUT <- subset(API_OUTPUT,select = -c(AMin,AMax))
+
+      }else if (is.character(API_OUTPUT$Month) && any(API_OUTPUT$Month %in% as.character(c(1:12)))){
+        mnth_lim <- month_limits[,c(6,9,10,11)]
+        colnames(mnth_lim)<-c("Binomial","AMin","AMax","Month")
+        mnth_lim$Month <- as.character(mnth_lim$Month)
+
+        mnth_lim <- dplyr::mutate(mnth_lim, Month = as.character(Month))
+        API_OUTPUT <- dplyr::left_join(API_OUTPUT,mnth_lim)
+        API_OUTPUT <- dplyr::mutate(API_OUTPUT,
+                                    API_min = (amin-AMin)/(AMax-AMin),
+                                    API_max = (amax-AMin)/(AMax-AMin))
+
+        API_OUTPUT <- subset(API_OUTPUT,select = -c(AMin,AMax))
+      }else{
+        stop("Month values are incorrectly specified. Month should be reported numerically or as characters 1:12 or
+           as three letter characters Jan:Dec")
+      }
+
+      if(any(na.omit(API_OUTPUT$Month =="Year"))){
+        API_Year <- API_OUTPUT[API_OUTPUT$Month %in% "Year",]
+        API_Year <- subset(API_Year,select = -c(API_min,API_max))
+
+        API_Year <-  dplyr::left_join(API_Year,yearly_limits[,c(6,9,10)])
+        API_Year <- dplyr::mutate(API_Year,
+                                  API_min = (amin-AMin)/(AMax-AMin),
+                                  API_max = (amax-AMin)/(AMax-AMin))
+
+        API_Year <- subset(API_Year,select = -c(AMin,AMax))
+
+        API_Month <- API_OUTPUT[!API_OUTPUT$Month %in% "Year",]
+        API_OUTPUT <- rbind(API_Month,API_Year)
       }
     }
-    out_of_rangemin <- API_OUTPUT[is.na(API_OUTPUT$API_min),1]
-    out_of_rangemax <- API_OUTPUT[is.na(API_OUTPUT$API_max),1]
-    if(length(out_of_rangemin)>0||length(out_of_rangemax)>0){
+    if(any(is.na(API_OUTPUT$API_min)) ||any(is.na(API_OUTPUT$API_max))  ){
       warning("Some rows contained innaccurate information for species name,
-            month, or Aridity Data. Rows with this type of error had the
-            API propogated with NA")
-      return(API_OUTPUT)
-    } else {
-      return(API_OUTPUT)
-    }
+            month or Ar. Rows with this type of error had the API propogated
+            with NA")}
+    return(API_OUTPUT)
   }
-  ############ALL##################
+
+  ############ALL###############
   else if (ar_var == "all"){
     API_OUTPUT <- sp_df
     API_OUTPUT$API_min <- NA
     API_OUTPUT$API_max <- NA
     API_OUTPUT$API_mean <- NA
     if (isTRUE(flag_sp)){
-      API_OUTPUT$BINOMIALS_MATCH <- (API_OUTPUT$Binomial %in% year_limits$Binomial)
+      API_OUTPUT$BINOMIALS_MATCH <- (API_OUTPUT$Binomial %in% yearly_limits$Binomial)
     }
     if (isTRUE(flag_month)){
       for (nr in 1:nrow(API_OUTPUT)){
@@ -356,144 +300,85 @@ api <- function(sp_df, ar_var = NULL, use_year = FALSE, flag_sp = FALSE,
       }
     }
     if (isTRUE(flag_ar)){
-      API_OUTPUT$Flag_AMin <- (!is.na(API_OUTPUT$AMin))
-      API_OUTPUT$Flag_AMax <- (!is.na(API_OUTPUT$AMax))
+      API_OUTPUT$Flag_AMin <- (!is.na(API_OUTPUT$amin))
+      API_OUTPUT$Flag_AMax <- (!is.na(API_OUTPUT$amax))
       API_OUTPUT$Flag_Ar<- (!is.na(API_OUTPUT$Ar))
     }
-    for (row in 1:nrow(API_OUTPUT)){
-      mnth <- API_OUTPUT[row,"Month"]
+    if(isTRUE(use_year)){
+      API_OUTPUT <- dplyr::left_join(API_OUTPUT,yearly_limits[,c(6,9,10)])
 
-      if (isTRUE(use_year)){
-        amin <- API_OUTPUT[row, "AMin"]
-        amax <- API_OUTPUT[row, "AMax"]
-        amean <- API_OUTPUT[row, "Ar"]
-        Aminimum <- year_limits[year_limits$Binomial %in%
-                                  API_OUTPUT[row,"Binomial"], "AMin"]
-        Amaximum <- year_limits[year_limits$Binomial %in%
-                                  API_OUTPUT[row,"Binomial"], "AMax"]
-        if (length(Aminimum) > 0 && length(Amaximum) > 0){
-          API_OUTPUT[row,"API_min"] <-
-            as.numeric(signif((amin-Aminimum)/(Amaximum-Aminimum)),digits = 6)
-          API_OUTPUT[row,"API_max"] <-
-            as.numeric(signif((amax-Aminimum)/(Amaximum-Aminimum)),digits = 6)
-          API_OUTPUT[row,"API_mean"] <-
-            as.numeric(signif((amean-Aminimum)/(Amaximum-Aminimum)),digits = 6)
-        } else {
-          API_OUTPUT[row,"API_min"] <- NA
-          API_OUTPUT[row,"API_max"] <- NA
-          API_OUTPUT[row,"API_mean"] <- NA
-        }
-      } else {
-        if (is.na(mnth)){
-          API_OUTPUT[row,"API_min"] <- NA
-          API_OUTPUT[row,"API_max"] <- NA
-          API_OUTPUT[row,"API_mean"] <- NA
-        } else if (is.numeric(mnth) && mnth %in% c(1:12)){
-          amin <- API_OUTPUT[row, "AMin"]
-          amax <- API_OUTPUT[row, "AMax"]
-          amean <- API_OUTPUT[row, "Ar"]
-          Aminimum <- month_limits[month_limits$Binomial %in%
-                                     API_OUTPUT[row,"Binomial"] &
-                                     month_limits$MonthNumber == mnth, "AMin"]
-          Amaximum <- month_limits[month_limits$Binomial %in%
-                                     API_OUTPUT[row,"Binomial"] &
-                                     month_limits$MonthNumber == mnth, "AMax"]
-          if (length(Aminimum) > 0 && length(Amaximum) > 0){
-            API_OUTPUT[row,"API_min"] <-
-              as.numeric(signif((amin-Aminimum)/(Amaximum-Aminimum)),digits = 6)
-            API_OUTPUT[row,"API_max"] <-
-              as.numeric(signif((amax-Aminimum)/(Amaximum-Aminimum)),digits = 6)
-            API_OUTPUT[row,"API_mean"] <-
-              as.numeric(signif((amean-Aminimum)/(Amaximum-Aminimum)),digits = 6)
-          } else {
-            API_OUTPUT[row,"API_min"] <- NA
-            API_OUTPUT[row,"API_max"] <- NA
-            API_OUTPUT[row,"API_mean"] <- NA
-          }
-        } else if (is.character(mnth) && mnth %in% month.abb[1:12]){
-          amin <- API_OUTPUT[row, "AMin"]
-          amax <- API_OUTPUT[row, "AMax"]
-          amean <- API_OUTPUT[row, "Ar"]
-          Aminimum <- month_limits[month_limits$Binomial %in%
-                                     API_OUTPUT[row,"Binomial"] &
-                                     month_limits$MonthName == mnth, "AMin"]
-          Amaximum <- month_limits[month_limits$Binomial %in%
-                                     API_OUTPUT[row,"Binomial"] &
-                                     month_limits$MonthName == mnth, "AMax"]
-          if (length(Aminimum) > 0 && length(Amaximum) > 0){
-            API_OUTPUT[row,"API_min"] <-
-              as.numeric(signif((amin-Aminimum)/(Amaximum-Aminimum)),digits = 6)
-            API_OUTPUT[row,"API_max"] <-
-              as.numeric(signif((amax-Aminimum)/(Amaximum-Aminimum)),digits = 6)
-            API_OUTPUT[row,"API_mean"] <-
-              as.numeric(signif((amean-Aminimum)/(Amaximum-Aminimum)),digits = 6)
-          } else {
-            API_OUTPUT[row,"API_min"] <- NA
-            API_OUTPUT[row,"API_max"] <- NA
-            API_OUTPUT[row,"API_mean"] <- NA
-          }
-        } else if (is.character(mnth) && mnth %in% as.character(c(1:12))){
-          mnth <- as.numeric(mnth)
-          amin <- API_OUTPUT[row, "AMin"]
-          amax <- API_OUTPUT[row, "AMax"]
-          amean <- API_OUTPUT[row, "Ar"]
-          Aminimum <- month_limits[month_limits$Binomial %in%
-                                     API_OUTPUT[row,"Binomial"] &
-                                     month_limits$MonthNumber == mnth, "AMin"]
-          Amaximum <- month_limits[month_limits$Binomial %in%
-                                     API_OUTPUT[row,"Binomial"] &
-                                     month_limits$MonthNumber == mnth, "AMax"]
-          if (length(Aminimum) > 0 && length(Amaximum) > 0){
-            API_OUTPUT[row,"API_min"] <-
-              as.numeric(signif((amin-Aminimum)/(Amaximum-Aminimum)),digits = 6)
-            API_OUTPUT[row,"API_max"] <-
-              as.numeric(signif((amax-Aminimum)/(Amaximum-Aminimum)),digits = 6)
-            API_OUTPUT[row,"API_mean"] <-
-              as.numeric(signif((amean-Aminimum)/(Amaximum-Aminimum)),digits = 6)
-          } else {
-            API_OUTPUT[row,"API_min"] <- NA
-            API_OUTPUT[row,"API_max"] <- NA
-            API_OUTPUT[row,"API_mean"] <- NA
-          }
-        } else if (is.character(mnth) && mnth=="Year"){
-          amin <- API_OUTPUT[row, "AMin"]
-          amax <- API_OUTPUT[row, "AMax"]
-          amean <- API_OUTPUT[row, "Ar"]
-          Aminimum <- year_limits[year_limits$Binomial %in%
-                                    API_OUTPUT[row,"Binomial"], "AMin"]
-          Amaximum <- year_limits[year_limits$Binomial %in%
-                                    API_OUTPUT[row,"Binomial"], "AMax"]
-          if (length(Aminimum) > 0 && length(Amaximum) > 0){
-            API_OUTPUT[row,"API_min"] <-
-              as.numeric(signif((amin-Aminimum)/(Amaximum-Aminimum)),digits = 6)
-            API_OUTPUT[row,"API_max"] <-
-              as.numeric(signif((amax-Aminimum)/(Amaximum-Aminimum)),digits = 6)
-            API_OUTPUT[row,"API_mean"] <-
-              as.numeric(signif((amean-Aminimum)/(Amaximum-Aminimum)),digits = 6)
-          } else {
-            API_OUTPUT[row,"API_min"] <- NA
-            API_OUTPUT[row,"API_max"] <- NA
-            API_OUTPUT[row,"API_mean"] <- NA
-          }
-        } else {
-        API_OUTPUT[row,"API_min"] <- NA
-        API_OUTPUT[row,"API_max"] <- NA
-        API_OUTPUT[row,"API_mean"] <- NA
-        }
+      API_OUTPUT <- dplyr::mutate(API_OUTPUT,
+                                  API_min = (amin-AMin)/(AMax-AMin),
+                                  API_max = (amax-AMin)/(AMax-AMin),
+                                  API_mean = (Ar - AMin)/(AMax-AMin))
+
+      API_OUTPUT <- subset(API_OUTPUT,select = -c(AMin,AMax))
+
+
+    }else{
+      if(is.numeric(API_OUTPUT$Month)){
+        mnth_lim <- month_limits[,c(6,9,10,11)]
+        colnames(mnth_lim)<-c("Binomial","AMin","AMax","Month")
+
+        API_OUTPUT <- dplyr::left_join(API_OUTPUT,mnth_lim)
+
+        API_OUTPUT <- dplyr::mutate(API_OUTPUT,
+                                    API_min = (amin-AMin)/(AMax-AMin),
+                                    API_max = (amax-AMin)/(AMax-AMin),
+                                    API_mean = (Ar - AMin)/(AMax-AMin))
+
+        API_OUTPUT <- subset(API_OUTPUT,select = -c(AMin,AMax))
+
+      }else if (is.character(API_OUTPUT$Month) && any(API_OUTPUT$Month %in% month.abb[1:12])){
+        mnth_lim <- month_limits[,c(6,9,10,12)]
+        colnames(mnth_lim)<-c("Binomial","AMin","AMax","Month")
+
+        API_OUTPUT <- dplyr::left_join(API_OUTPUT,mnth_lim)
+        API_OUTPUT <- dplyr::mutate(API_OUTPUT,
+                                    API_min = (amin-AMin)/(AMax-AMin),
+                                    API_max = (amax-AMin)/(AMax-AMin),
+                                    API_mean = (Ar - AMin)/(AMax-AMin))
+
+        API_OUTPUT <- subset(API_OUTPUT,select = -c(AMin,AMax))
+
+      }else if (is.character(API_OUTPUT$Month) && any(API_OUTPUT$Month %in% as.character(c(1:12)))){
+        mnth_lim <- month_limits[,c(6,9,10,11)]
+        colnames(mnth_lim)<-c("Binomial","AMin","AMax","Month")
+        mnth_lim$Month <- as.character(mnth_lim$Month)
+
+        mnth_lim <- dplyr::mutate(mnth_lim, Month = as.character(Month))
+        API_OUTPUT <- dplyr::left_join(API_OUTPUT,mnth_lim)
+        API_OUTPUT <- dplyr::mutate(API_OUTPUT,
+                                    API_min = (amin-AMin)/(AMax-AMin),
+                                    API_max = (amax-AMin)/(AMax-AMin),
+                                    API_mean = (Ar - AMin)/(AMax-AMin))
+
+        API_OUTPUT <- subset(API_OUTPUT,select = -c(AMin,AMax))
+      }else{
+        stop("Month values are incorrectly specified. Month should be reported numerically or as characters 1:12 or
+           as three letter characters Jan:Dec")
+      }
+      if(any(na.omit(API_OUTPUT$Month =="Year"))){
+        API_Year <- API_OUTPUT[API_OUTPUT$Month %in% "Year",]
+        API_Year <- subset(API_Year,select = -c(API_min,API_max,API_mean))
+
+        API_Year <-  dplyr::left_join(API_Year,yearly_limits[,c(6,9,10)])
+        API_Year <- dplyr::mutate(API_Year,
+                                  API_min = (amin-AMin)/(AMax-AMin),
+                                  API_max = (amax-AMin)/(AMax-AMin),
+                                  API_mean = (Ar - AMin)/(AMax-AMin))
+
+        API_Year <- subset(API_Year,select = -c(AMin,AMax))
+
+        API_Month <- API_OUTPUT[!API_OUTPUT$Month %in% "Year",]
+        API_OUTPUT <- rbind(API_Month,API_Year)
       }
     }
-    out_of_rangemin <- API_OUTPUT[is.na(API_OUTPUT$API_min),1]
-    out_of_rangemax <- API_OUTPUT[is.na(API_OUTPUT$API_max),1]
-    out_of_rangemean <- API_OUTPUT[is.na(API_OUTPUT$API_mean),1]
-    if(length(out_of_rangemin)>0 || length(out_of_rangemax)>0 || length(out_of_rangemean)>0){
+    if(any(is.na(API_OUTPUT$API_min)) ||any(is.na(API_OUTPUT$API_max))  ){
       warning("Some rows contained innaccurate information for species name,
-            month, or Aridity Data. Rows with this type of error had the
-            API propogated with NA")
-      return(API_OUTPUT)
-    } else {
-      return(API_OUTPUT)
-    }
-  } else if (!is.null(ar_var) && !ar_var == "all" && !ar_var == "minmax"){
-    stop("tmp_var is out of range")
+            month or Ar. Rows with this type of error had the API propogated
+            with NA")}
+    return(API_OUTPUT)
+
   }
 }

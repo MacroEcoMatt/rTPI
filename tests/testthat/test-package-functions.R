@@ -62,221 +62,202 @@ test_that("Check that error codes work properly and returns proper results",{
 
 species_data <- data.frame(
   Binomial = c("Poecile atricapillus", "Poecile atricapillus","Poecile atrisdfpillus","Poecile atricapillus"),
-  Month = c(1,2,3,14),
-  TMax = c(5,10,12,13),
-  TMin = c(-2,-1,0,2),
-  Tm = c(0,3,-1,1)
+  Month = c(1,2,3,13),
+  tmax = c(5,10,12,NA),
+  tmin = c(-2,-1,0,NA),
+  Tm = c(0,3,-1,NA)
 )
+
 species_noerrors <- data.frame(
-  Binomial = c("Poecile atricapillus","Poecile atricapillus","x","x"),
-  Month = c(1,NA,2,NA),
-  TMax = c(5,13,2,3),
-  TMin = c(-2,1,2,4),
-  Tm = c(0,2,3,5)
+  Binomial = c("Poecile atricapillus","Poecile atricapillus","x","x","x"),
+  Month = c("Feb",NA,"Jan",NA,"Year"),
+  tmax = c(5,13,2,3,4),
+  tmin = c(-2,1,2,4,6),
+  Tm = c(0,2,3,5,6)
 )
 clean_data <- data.frame(
   Binomial = c("Poecile atricapillus"),
   Month = c(1),
-  TMax = c(5),
-  TMin = c(-2),
+  tmax = c(5),
+  tmin = c(-2),
+  Tm = c(0)
+)
+clean_datab <- data.frame(
+  Binomial = c("Poecile atricapillus","Poecile atricapillus"),
+  Month = c("1","Year"),
+  tmax = c(5,5),
+  tmin = c(-2,1),
+  Tm = c(0,1)
+)
+clean_datac <- data.frame(
+  Binomial = c("Poecile atricapillus"),
+  Month = c("Jan"),
+  tmax = c(5),
+  tmin = c(-2),
   Tm = c(0)
 )
 species_noerrors2 <- data.frame(
   Binomial = c("Poecile atricapillus", "Poecile atricapillus","Poecile atricapillus","x","x","x"),
   Month = c("Feb","Year","2","Mar","1","Year"),
-  TMax = c(5,10,12,12,2,2),
-  TMin = c(-2,-1,0,1,1,3),
+  tmax = c(5,10,12,12,2,2),
+  tmin = c(-2,-1,0,1,1,3),
   Tm = c(0,3,4,3,3,4)
 )
 species_char_month <- data.frame(
-  Binomial = c("Poecile atricapillus", "Poecile atricapillus","Poecile atricapillus","Poecile atricapillus","Poecile atricapillus","Poecile atricapillus","Poecile atricapillus"),
-  Month = c("Ja","Feb","Year","2","Jan","Jan","Mar"),
-  TMax = c(5,10,12,13,13,13,NA),
-  TMin = c(-2,-1,0,1,1,NA,2),
-  Tm = c(0,3,4,2,NA,1,2)
+  Binomial = c("Poecile atricapillus"),
+  Month = c("Ja"),
+  tmax = c(5),
+  tmin = c(-2),
+  Tm = c(0)
 )
 #TEST FUNCTION tpi
 test_that("Check that error codes work properly and returns proper results",{
   expect_no_error(tpi(clean_data))
   expect_no_error(tpi(clean_data, tmp_var = "minmax"))
   expect_no_error(tpi(clean_data, tmp_var = "all"))
+  expect_no_error(tpi(clean_datab))
+  expect_no_error(tpi(clean_datab, tmp_var = "minmax"))
+  expect_no_error(tpi(clean_datab, tmp_var = "all"))
+  expect_no_error(tpi(clean_datac))
+  expect_no_error(tpi(clean_datac, tmp_var = "minmax"))
+  expect_no_error(tpi(clean_datac, tmp_var = "all"))
 
-  expect_warning(tpi(species_data, flag_sp = T, flag_month = T, flag_tmp = T, use_year = T))
-  expect_warning(tpi(species_char_month, flag_sp = T, flag_month = T, flag_tmp = T, use_year = T))
+  expect_no_error(tpi(clean_data, use_year = T))
+  expect_no_error(tpi(clean_data, tmp_var = "minmax", use_year = T))
+  expect_no_error(tpi(clean_data, tmp_var = "all", use_year = T))
 
-  expect_warning(tpi(species_data, flag_sp = T, flag_month = T, flag_tmp = T, use_year = T, tmp_var = "minmax"))
-  expect_warning(tpi(species_char_month, flag_sp = T, flag_month = T, flag_tmp = T, use_year = T, tmp_var = "minmax"))
+  expect_no_error(tpi(clean_data, flag_month = T, flag_tmp = T,flag_sp=T))
+  expect_no_error(tpi(clean_data, tmp_var = "minmax",flag_sp = T, flag_month = T, flag_tmp = T))
+  expect_no_error(tpi(clean_data, tmp_var = "all",flag_sp = T, flag_month = T, flag_tmp = T))
 
-  expect_warning(tpi(species_data, flag_sp = T, flag_month = T, flag_tmp = T, use_year = T, tmp_var = "all"))
-  expect_warning(tpi(species_char_month, flag_sp = T, flag_month = T, flag_tmp = T, use_year = T, tmp_var = "all"))
+  expect_warning(tpi(species_data, flag_month = T, flag_tmp = T,flag_sp=T))
+  expect_warning(tpi(species_data, tmp_var = "minmax",flag_month = T, flag_tmp = T,flag_sp=T))
+  expect_warning(tpi(species_data, tmp_var = "all",flag_month = T, flag_tmp = T,flag_sp=T))
 
-  expect_warning(tpi(species_noerrors, flag_sp = T, flag_month = T, flag_tmp = T, use_year = T, tmp_var = "all"))
-  expect_warning(tpi(species_noerrors, flag_sp = T, flag_month = T, flag_tmp = T, use_year = T, tmp_var = "minmax"))
   expect_warning(tpi(species_noerrors, flag_sp = T, flag_month = T, flag_tmp = T, use_year = T))
-  expect_warning(tpi(species_noerrors2, flag_sp = T, flag_month = T, flag_tmp = T, use_year = T, tmp_var = "all"))
-  expect_warning(tpi(species_noerrors2, flag_sp = T, flag_month = T, flag_tmp = T, use_year = T, tmp_var = "minmax"))
-  expect_warning(tpi(species_noerrors2, flag_sp = T, flag_month = T, flag_tmp = T, use_year = T))
+  expect_warning(tpi(species_noerrors,tmp_var = "minmax", flag_sp = T, flag_month = T, flag_tmp = T, use_year = T))
+  expect_warning(tpi(species_noerrors, tmp_var = "all", flag_sp = T, flag_month = T, flag_tmp = T, use_year = T))
 
-  expect_warning(tpi(species_data, flag_sp = T, flag_month = T, flag_tmp = T, use_year = F))
-  expect_warning(tpi(species_char_month, flag_sp = T, flag_month = T, flag_tmp = T, use_year = F))
-
-  expect_warning(tpi(species_data, flag_sp = T, flag_month = T, flag_tmp = T, use_year = F, tmp_var = "minmax"))
-  expect_warning(tpi(species_char_month, flag_sp = T, flag_month = T, flag_tmp = T, use_year = F, tmp_var = "minmax"))
-
-  expect_warning(tpi(species_data, flag_sp = T, flag_month = T, flag_tmp = T, use_year = F, tmp_var = "all"))
-  expect_warning(tpi(species_char_month, flag_sp = T, flag_month = T, flag_tmp = T, use_year = F, tmp_var = "all"))
-
-  expect_warning(tpi(species_noerrors, flag_sp = T, flag_month = T, flag_tmp = T, use_year = F, tmp_var = "all"))
-  expect_warning(tpi(species_noerrors, flag_sp = T, flag_month = T, flag_tmp = T, use_year = F, tmp_var = "minmax"))
-  expect_warning(tpi(species_noerrors, flag_sp = T, flag_month = T, flag_tmp = T, use_year = F))
-  expect_warning(tpi(species_noerrors2, flag_sp = T, flag_month = T, flag_tmp = T, use_year = F, tmp_var = "all"))
-  expect_warning(tpi(species_noerrors2, flag_sp = T, flag_month = T, flag_tmp = T, use_year = F, tmp_var = "minmax"))
-  expect_warning(tpi(species_noerrors2, flag_sp = T, flag_month = T, flag_tmp = T, use_year = F))
-
-  expect_error(tpi(species_char_month, tmp_var = "l"))
-
-  expect_warning(tpi(species_noerrors, tmp_var = NULL))
-  expect_warning(tpi(species_noerrors, tmp_var = "all"))
-  expect_warning(tpi(species_noerrors, tmp_var = "minmax"))
+  expect_error(tpi(species_noerrors2))
+  expect_error(tpi(clean_data,tmp_var = "a"))
+  expect_error(tpi(species_char_month,tmp_var = "minmax"))
+  expect_error(tpi(species_char_month,tmp_var = "all"))
+  expect_error(tpi(species_char_month))
 })
+
 clean_data2 <- data.frame(
   Binomial = c("Poecile atricapillus"),
   Month = c(1),
-  AMax = c(5),
-  AMin = c(2),
+  amax = c(5),
+  amin = c(2),
   Ar = c(4)
 )
-a_data <- data.frame(
+
+clean_data3 <- data.frame(
+  Binomial = c("Poecile atricapillus"),
+  Month = c("1","Year"),
+  amax = c(5,2),
+  amin = c(2,2),
+  Ar = c(4,2)
+)
+clean_data4 <- data.frame(
+  Binomial = c("Poecile atricapillus"),
+  Month = c("Jan"),
+  amax = c(5),
+  amin = c(2),
+  Ar = c(4)
+)
+species_data2 <- data.frame(
   Binomial = c("Poecile atricapillus", "Poecile atricapillus","Poecile atrisdfpillus","Poecile atricapillus"),
-  Month = c(1,2,3,14),
-  AMax = c(5,3,2,2),
-  AMin = c(2,1,0,2),
-  Ar = c(0,3,1,1)
+  Month = c(1,2,3,13),
+  amax = c(0,1,1,NA),
+  amin = c(0,0,0,NA),
+  Ar = c(0,3,1,NA)
 )
-a_noerrors <- data.frame(
-  Binomial = c("Poecile atricapillus","Poecile atricapillus","Poecile atricapillus","Poecile atricapillus","Poecile atricapillus","x","x"),
-  Month = c(1,2,3,12,NA,2,NA),
-  AMax = c(5,3,2,2,4,4,5),
-  AMin = c(2,1,0,2,1,2,1),
-  Ar = c(0,3,1,1,1,1,1)
-)
-
-a_ar_errors <- data.frame(
-  Binomial = c("Poecile atricapillus", "Poecile atricapillus","Poecile atricapillus"),
-  Month = c("Feb","Year","2"),
-  AMax = c(5,-10,12),
-  AMin = c(-2,1,0),
-  Ar = c(0,3,-4)
+species_noerrors22 <- data.frame(
+  Binomial = c("Poecile atricapillus","Poecile atricapillus","x","x","x"),
+  Month = c("Feb",NA,"Jan",NA,"Year"),
+  amax = c(5,13,2,3,4),
+  amin = c(2,1,2,4,6),
+  Ar = c(0,2,3,5,6)
 )
 
-a_noerrors2 <- data.frame(
+species_noerrors2b <- data.frame(
   Binomial = c("Poecile atricapillus", "Poecile atricapillus","Poecile atricapillus","x","x","x"),
   Month = c("Feb","Year","2","Mar","1","Year"),
-  AMax = c(5,10,12,5,6,7),
-  AMin = c(2,1,0,1,2,1),
-  Ar = c(0,3,4,3,3,2)
+  amax = c(5,10,12,12,2,2),
+  amin = c(2,1,0,1,1,3),
+  Ar = c(0,3,4,3,3,4)
 )
-a_char_month <- data.frame(
-  Binomial = c("Poecile atricapillus", "Poecile atricapillus","Poecile atricapillus","Poecile atricapillus","Poecile atricapillus","Poecile atricapillus","Poecile atricapillus"),
-  Month = c("Ja","Feb","Year","2","Jan","Jan","Mar"),
-  AMax = c(5,10,12,13,13,13,NA),
-  AMin = c(2,1,0,1,1,NA,2),
-  Ar = c(0,3,4,2,NA,1,2)
+species_char_month <- data.frame(
+  Binomial = c("Poecile atricapillus"),
+  Month = c("Ja"),
+  tmax = c(5),
+  tmin = c(2),
+  Tm = c(0)
+)
+
+mon_neg <- data.frame(
+  Binomial = c("Poecile atricapillus"),
+  Month = c("Jan"),
+  amax = c(5),
+  amin = c(2),
+  Ar = c(-1)
+)
+mon_neg2 <- data.frame(
+  Binomial = c("Poecile atricapillus"),
+  Month = c("Jan"),
+  amax = c(-5),
+  amin = c(-2),
+  Ar = c(-1)
+)
+mon_neg3 <- data.frame(
+  Binomial = c("Poecile atricapillus"),
+  Month = c("Jan"),
+  amax = c(-5),
+  amin = c(-2),
+  Ar = c(1)
 )
 #TEST FUNCTION api
 test_that("Check that error codes work properly and returns proper results",{
   expect_no_error(api(clean_data2))
   expect_no_error(api(clean_data2, ar_var = "minmax"))
   expect_no_error(api(clean_data2, ar_var = "all"))
+  expect_no_error(api(clean_data3))
+  expect_no_error(api(clean_data3, ar_var = "minmax"))
+  expect_no_error(api(clean_data3, ar_var = "all"))
+  expect_no_error(api(clean_data4))
+  expect_no_error(api(clean_data4, ar_var = "minmax"))
+  expect_no_error(api(clean_data4, ar_var = "all"))
 
-  expect_warning(api(a_data, flag_sp = T, flag_month = T, flag_ar = T, use_year = T))
-  expect_warning(api(a_char_month, flag_sp = T, flag_month = T, flag_ar = T, use_year = T))
+  expect_no_error(api(clean_data2, use_year = T))
+  expect_no_error(api(clean_data2, ar_var = "minmax", use_year = T))
+  expect_no_error(api(clean_data2, ar_var = "all", use_year = T))
 
-  expect_warning(api(a_data, flag_sp = T, flag_month = T, flag_ar = T, use_year = T, ar_var = "minmax"))
-  expect_warning(api(a_char_month, flag_sp = T, flag_month = T, flag_ar = T, use_year = T, ar_var = "minmax"))
+  expect_no_error(api(clean_data2, flag_month = T, flag_ar = T,flag_sp=T))
+  expect_no_error(api(clean_data2, ar_var = "minmax",flag_sp = T, flag_month = T, flag_ar = T))
+  expect_no_error(api(clean_data2, ar_var = "all", flag_sp = T, flag_month = T, flag_ar = T))
 
-  expect_warning(api(a_data, flag_sp = T, flag_month = T, flag_ar = T, use_year = T, ar_var = "all"))
-  expect_warning(api(a_char_month, flag_sp = T, flag_month = T, flag_ar = T, use_year = T, ar_var = "all"))
+  expect_warning(api(species_data2, flag_month = T, flag_ar = T,flag_sp=T))
+  expect_warning(api(species_data2, ar_var = "minmax",flag_month = T, flag_ar = T,flag_sp=T))
+  expect_warning(api(species_data2, ar_var = "all",flag_month = T, flag_ar = T,flag_sp=T))
 
-  expect_warning(api(a_noerrors, flag_sp = T, flag_month = T, flag_ar = T, use_year = T, ar_var = "all"))
-  expect_warning(api(a_noerrors, flag_sp = T, flag_month = T, flag_ar = T, use_year = T, ar_var = "minmax"))
-  expect_warning(api(a_noerrors, flag_sp = T, flag_month = T, flag_ar = T, use_year = T))
-  expect_warning(api(a_noerrors2, flag_sp = T, flag_month = T, flag_ar = T, use_year = T, ar_var = "all"))
-  expect_warning(api(a_noerrors2, flag_sp = T, flag_month = T, flag_ar = T, use_year = T, ar_var = "minmax"))
-  expect_warning(api(a_noerrors2, flag_sp = T, flag_month = T, flag_ar = T, use_year = T))
+  expect_warning(api(species_noerrors22, flag_sp = T, flag_month = T, flag_ar = T, use_year = T))
+  expect_warning(api(species_noerrors22, ar_var = "minmax", flag_sp = T, flag_month = T, flag_ar = T, use_year = T))
+  expect_warning(api(species_noerrors22, ar_var = "all", flag_sp = T, flag_month = T, flag_ar = T, use_year = T))
 
-  expect_warning(api(a_data, flag_sp = T, flag_month = T, flag_ar = T, use_year = F))
-  expect_warning(api(a_char_month, flag_sp = T, flag_month = T, flag_ar = T, use_year = F))
+  expect_error(api(species_noerrors2b))
+  expect_error(api(clean_data2, ar_var = "a"))
+  expect_error(api(species_char_month, ar_var = "minmax"))
+  expect_error(api(species_char_month, ar_var = "all"))
+  expect_error(api(species_char_month))
 
-  expect_warning(api(a_data, flag_sp = T, flag_month = T, flag_ar = T, use_year = F, ar_var = "minmax"))
-  expect_warning(api(a_char_month, flag_sp = T, flag_month = T, flag_ar = T, use_year = F, ar_var = "minmax"))
-
-  expect_warning(api(a_data, flag_sp = T, flag_month = T, flag_ar = T, use_year = T, ar_var = "all"))
-  expect_warning(api(a_char_month, flag_sp = T, flag_month = T, flag_ar = T, use_year = F, ar_var = "all"))
-
-  expect_warning(api(a_noerrors, flag_sp = T, flag_month = T, flag_ar = T, use_year = F, ar_var = "all"))
-  expect_warning(api(a_noerrors, flag_sp = T, flag_month = T, flag_ar = T, use_year = F, ar_var = "minmax"))
-  expect_warning(api(a_noerrors, flag_sp = T, flag_month = T, flag_ar = T, use_year = F))
-  expect_warning(api(a_noerrors2, flag_sp = T, flag_month = T, flag_ar = T, use_year = F, ar_var = "all"))
-  expect_warning(api(a_noerrors2, flag_sp = T, flag_month = T, flag_ar = T, use_year = F, ar_var = "minmax"))
-  expect_warning(api(a_noerrors2, flag_sp = T, flag_month = T, flag_ar = T, use_year = F))
-
-  expect_error(api(a_char_month, ar_var = "l"))
-  expect_error(api(a_ar_errors))
-  expect_error(api(a_ar_errors, ar_var = "all"))
-  expect_error(api(a_ar_errors, ar_var = "minmax"))
+  expect_error(api(mon_neg3,ar_var = "minmax"))
+  expect_error(api(mon_neg2,ar_var = "all"))
+  expect_error(api(mon_neg))
 })
 
-df <- data.frame(Year = c(2000,2001,2002,2003,2005),
-                 Month = c(6,7,8,9,1),
-                 Day = c(3,5,7,9,2),
-                 Lat = c(41.334287,41.334287,41.334287,41.334287,71.312061),
-                 Lon = c(-77.942020,-77.942020,-77.942020,-77.942020,-109.624424),
-                 Season = c("spring","summer","fall","winter","winter"))
 
-df2 <- data.frame(Year = c(2000),
-                 Month = c(6),
-                 Day = c(3),
-                 Lat = c(NA),
-                 Lon = c(NA),
-                 Season = c("spring"))
-
-df3 <- data.frame(Year = c(2000,2001,2002,2003),
-                 Month = c(6,7,8,9),
-                 Day = c(3,5,7,9),
-                 Lat = c(41.334287,41.334287,41.334287,41.334287),
-                 Lon = c(-77.942020,-77.942020,-77.942020,-77.942020),
-                 Season = c("spring","summer","fall","winter"))
-
-df4 <- data.frame(Year = c(2000),
-                  Month = c(6),
-                  Day = c(3),
-                  LAT = c(41.334287),
-                  LONGITUDE = c(-77.942020),
-                  Season = c("spring"))
-
-#TEST FUNCTION get_env_vars
-test_that("Check to ensure that variables are extracted appropriately",{
-  expect_no_error(get_env_vars(df3, env_vars="aridity", date_format = "daily"))
-  expect_no_error(get_env_vars(df, env_vars="aridity", date_format = "monthly"))
-  expect_no_error(get_env_vars(df, env_vars="aridity", date_format = "yearly"))
-  expect_no_error(get_env_vars(df, env_vars="aridity", date_format = "seasonal"))
-  expect_no_error(get_env_vars(df3, env_vars="tmp", date_format = "daily"))
-  expect_no_error(get_env_vars(df, env_vars="tmp", date_format = "monthly"))
-  expect_no_error(get_env_vars(df, env_vars="tmp", date_format = "yearly"))
-  expect_no_error(get_env_vars(df, env_vars="tmp", date_format = "seasonal"))
-  expect_no_error(get_env_vars(df3, env_vars="both", date_format = "daily"))
-  expect_no_error(get_env_vars(df, env_vars="both", date_format = "monthly"))
-  expect_no_error(get_env_vars(df, env_vars="both", date_format = "yearly"))
-  expect_no_error(get_env_vars(df, env_vars="both", date_format = "seasonal"))
-  expect_error(get_env_vars(df, env_vars="bh", date_format = "monthly"))
-  expect_error(get_env_vars(df3, env_vars="bh", date_format = "daily"))
-  expect_error(get_env_vars(df, env_vars="bh", date_format = "yearly"))
-  expect_error(get_env_vars(df, env_vars="bh", date_format = "seasonal"))
-  expect_error(get_env_vars(df, env_vars="both", date_format = "sl"))
-  expect_error(get_env_vars(df2, env_vars="both", date_format = "seasonal"))
-  expect_no_error(get_env_vars(df4, env_vars="tmp", date_format = "monthly"))
-})
 
 splist <- c("Poecile atricapillus", "Parus atricapillus","ile atricapillus")
 #TEST FUNCTION syn_check

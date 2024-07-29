@@ -14,22 +14,15 @@ Description: A system for calculating Thermal Position and
 Depends:
     R (>= 3.5.0)
 Imports:
-    dplyr,
-    sf,
-    terra,
-    AOI,
-    climateR
+    dplyr
 Suggests:
     devtools,
     testthat (>= 3.0.0),
     covr
-Remotes:
-    github::mikejohnson51/climateR,
-    github::mikejohnson51/AOI
 License: CC BY 4.0 + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.1
 LazyData: true
 URL: https://github.com/MacroEcoMatt/rTPI
 Config/testthat/edition: 3

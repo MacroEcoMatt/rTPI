@@ -73,7 +73,7 @@ species_limits <- function(sp_binomial, niche_limit = NULL, month_list = NULL,
   if (isFALSE(yr_avg)){
     return(month_df)
   } else if (isTRUE(yr_avg)){
-    yr_df <- subset(year_limits, Binomial %in% sp_binomial)
+    yr_df <- subset(yearly_limits, Binomial %in% sp_binomial)
     if (is.null(niche_limit) || niche_limit == "both"){
       df_final <- dplyr::bind_rows(month_df, yr_df)
       df_final <- df_final[order(df_final$Binomial), ]

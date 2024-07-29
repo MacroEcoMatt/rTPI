@@ -25,9 +25,9 @@ calculate API based on Yearly Average API limits. NAs will be ignored.}
 \item{ar_var}{Input string. Defaults to NULL which informs function to
 calculate API for column titled "Ar". Options: "minmax", "all".
 "minmax" indicates user has two columns with aridity data, one should be
-titled "Amin", the other "Amax". "all" indicates user has three columns with
-aridity data, should be titled "Amin", "Amax", and "Ar" ("Ar" indicating
-mean aridity). Output columns for Amin = API_min, Amax = API_max,
+titled "amin", the other "amax". "all" indicates user has three columns with
+aridity data, should be titled "amin", "amax", and "Ar" ("Ar" indicating
+mean aridity). Output columns for amin = API_min, amax = API_max,
 Ar = API_mean when ar_var = "all".}
 
 \item{use_year}{Boolean parameter, defualt FALSE. set to TURE to use yearly
@@ -67,18 +67,18 @@ aridity index measurement for the species range.
 species_data <-data.frame(
                Binomial = c("Poecile atricapillus", "Poecile atricapillus"),
                Month = c(1,2),
-               AMax = c(5,5),
-               AMin = c(2,1),
+               amax = c(5,5),
+               amin = c(2,1),
                Ar = c(0,3)
                )
 
-#would return API for column Tm
+#would return API for column Ar
 api(species_data)
 
-#would return API for AMin and AMax
+#would return API for anin and anax
 api(species_data, ar_var = "minmax")
 
-#would return API for AMin, AMax, and Ar
+#would return API for anin, anax, and Ar
 api(species_data, ar_var = "all", use_year = TRUE,
                 flag_sp = TRUE, flag_month = TRUE, flag_ar = TRUE)
 

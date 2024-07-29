@@ -87,13 +87,13 @@ highertaxa_limits <- function(taxa_code, taxa_list, niche_limit = NULL, month_li
     return(month_df)
   } else if (isTRUE(yr_avg)){
     if (taxa_code == "class"){
-      yr_df <- subset(year_limits, Class %in% taxa_list)
+      yr_df <- subset(yearly_limits, Class %in% taxa_list)
     } else if (taxa_code == "order"){
-      yr_df <- subset(year_limits, Order %in% taxa_list)
+      yr_df <- subset(yearly_limits, Order %in% taxa_list)
     } else if (taxa_code == "family"){
-      yr_df <- subset(year_limits, Family %in% taxa_list)
+      yr_df <- subset(yearly_limits, Family %in% taxa_list)
     } else if (taxa_code == "genus"){
-      yr_df <- subset(year_limits, Genus %in% taxa_list)
+      yr_df <- subset(yearly_limits, Genus %in% taxa_list)
     }
     if (is.null(niche_limit) || niche_limit == "both"){
       df_final <- dplyr::bind_rows(month_df, yr_df)

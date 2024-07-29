@@ -25,9 +25,9 @@ calculate TPI based on Yearly Average TPI limits. NAs will be ignored.}
 \item{tmp_var}{Input string. Defaults to NULL which informs function to
 calculate TPI for column titled "Tm". Options: "minmax", "all".
 "minmax" indicates user has two columns with temperature data, one should be
-titled "Tmin", the other "Tmax". "all" indicates user has three columns with
-temperature data, should be titled "Tmin", "Tmax", and "Tm" ("Tm" indicating
-mean temperature). Output columns for Tmin = TPI_min, Tmax = TPI_max,
+titled "tmin", the other "tmax". "all" indicates user has three columns with
+temperature data, should be titled "tmin", "tmax", and "Tm" ("Tm" indicating
+mean temperature). Output columns for tmin = TPI_min, tmax = TPI_max,
 Tm = TPI_mean when tmp_var = "all".}
 
 \item{use_year}{Boolean parameter, defualt FALSE. set to TURE to use yearly
@@ -62,19 +62,18 @@ add a column to submitted dataframe with TPI values.
 species_data <- data.frame(
                Binomial = c("Poecile atricapillus", "Poecile atricapillus"),
                Month = c(1,2),
-               TMax = c(5,10),
-               TMin = c(-2,-1),
+               tmax = c(5,10),
+               tmin = c(-2,-1),
                Tm = c(0,3)
                )
 
 #would return TPI for column Tm
 results <- tpi(species_data)
 
-#would return TPI for TMin and TMax
+#would return TPI for tmin and tmax
 results <- tpi(species_data, tmp_var = "minmax")
 
-#would return TPI for TMin, TMax, and Tm
+#would return TPI for tmin, tmax, and Tm
 results <- tpi(species_data, tmp_var = "all", use_year = TRUE,
                 flag_sp = TRUE, flag_month = TRUE, flag_tmp = TRUE)
-
 }
