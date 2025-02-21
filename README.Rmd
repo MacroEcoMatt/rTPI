@@ -56,11 +56,6 @@ highertaxa_limits - used to extract a dataframe containint the TPI/API
 information for submitted list of higher taxa groups 
 (e.g taxa_code = "clas", taxa_list = "Aves)
 
-get_env_vars - used to collect historical temperature and aridity data based on
-user submitted data. This function utilizes the climateR package. This is
-particularly useful for extracting Aridity Index values which is what API is
-calculated from.
-
 tpi - calculates TPI and prodcues a dataframe of values based on user submitted
 data. Requires species binomial, and temperature data in degrees celcius
 
@@ -86,16 +81,6 @@ Aves_TPI <- highertaxa_limits(taxa_code = "class", taxa_list="Aves",
                               niche_limit = "tpi", month_list="Jan", 
                               yr_avg=TRUE)
 
-##get_env_vars
-df <- data.frame(Year = c(2000,2000),
-  Month = c(6,7),
-  Day = c(3,5),
-  Lat = c(41.334287,41.334287),
-  Lon = c(-77.942020,-77.942020),
-  Season = c("summer","summer"))
-
-Summer_env_vars <- get_env_vars(df, env_vars= "both", date_format = "monthly")
-
 ##TPI AND API
 species_data <- data.frame(
                 Binomial = c("Poecile atricapillus", "Poecile atricapillus"),
@@ -118,10 +103,6 @@ api_Poec_atr <- api(species_data, ar_var = NULL, use_year = FALSE, flag_sp = FAL
 #Formatting:
 This is important for the get_env_vars, tpi, and api functions as users need to
 submit dataframes with specific column names.
-
-get_env_vars: needs a dataframe with columns titled: 
-"Lat" and "Lon" - for finding geographic locations, and the data in these 
-columns must be in decimal degrees.
 
 Depending on the environmental information required different dates can be 
 included, but submitted dataframes must have at least a column titled "Year".
