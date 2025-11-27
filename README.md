@@ -44,11 +44,6 @@ highertaxa_limits - used to extract a dataframe containint the TPI/API
 information for submitted list of higher taxa groups (e.g taxa_code =
 “clas”, taxa_list = “Aves)
 
-get_env_vars - used to collect historical temperature and aridity data
-based on user submitted data. This function utilizes the climateR
-package. This is particularly useful for extracting Aridity Index values
-which is what API is calculated from.
-
 tpi - calculates TPI and prodcues a dataframe of values based on user
 submitted data. Requires species binomial, and temperature data in
 degrees celcius
@@ -90,58 +85,6 @@ Aves_TPI <- highertaxa_limits(taxa_code = "class", taxa_list="Aves",
                               niche_limit = "tpi", month_list="Jan", 
                               yr_avg=TRUE)
 
-##get_env_vars
-df <- data.frame(Year = c(2000,2000),
-  Month = c(6,7),
-  Day = c(3,5),
-  Lat = c(41.334287,41.334287),
-  Lon = c(-77.942020,-77.942020),
-  Season = c("summer","summer"))
-
-Summer_env_vars <- get_env_vars(df, env_vars= "both", date_format = "monthly")
-#> Loading required package: raster
-#> Loading required package: sp
-#> The legacy packages maptools, rgdal, and rgeos, underpinning the sp package,
-#> which was just loaded, will retire in October 2023.
-#> Please refer to R-spatial evolution reports for details, especially
-#> https://r-spatial.org/r/2023/05/15/evolution4.html.
-#> It may be desirable to make the sf package available;
-#> package maintainers should consider adding sf to Suggests:.
-#> The sp package is now running under evolution status 2
-#>      (status 2 uses the sf package in place of rgdal)
-#> 
-#> Attaching package: 'raster'
-#> The following object is masked from 'package:dplyr':
-#> 
-#>     select
-#> Loading required package: AOI
-#> source:   http://thredds.northwestknowledge.net:8080/thredds/dodsC/agg... 
-#> varname(s):
-#>    > pet [mm] (water_potential_evaporation_amount)
-#>    > ppt [mm] (precipitation_amount)
-#>    > tmax [degC] (air_temperature)
-#>    > tmin [degC] (air_temperature)
-#> ==================================================
-#> diminsions:  3, 2, 1 (names: lon,lat,time)
-#> resolution:  0.042, 0.042, 1 months
-#> extent:      -78, -77.88, 41.29, 41.38 (xmin, xmax, ymin, ymax)
-#> crs:         +proj=longlat +a=6378137 +f=0.00335281066474748 +p...
-#> time:        2000-06-01 to 2000-06-01
-#> ==================================================
-#> values: 24 (vars*X*Y*T)source:    http://thredds.northwestknowledge.net:8080/thredds/dodsC/agg... 
-#> varname(s):
-#>    > pet [mm] (water_potential_evaporation_amount)
-#>    > ppt [mm] (precipitation_amount)
-#>    > tmax [degC] (air_temperature)
-#>    > tmin [degC] (air_temperature)
-#> ==================================================
-#> diminsions:  3, 2, 1 (names: lon,lat,time)
-#> resolution:  0.042, 0.042, 1 months
-#> extent:      -78, -77.88, 41.29, 41.38 (xmin, xmax, ymin, ymax)
-#> crs:         +proj=longlat +a=6378137 +f=0.00335281066474748 +p...
-#> time:        2000-07-01 to 2000-07-01
-#> ==================================================
-#> values: 24 (vars*X*Y*T)
 
 ##TPI AND API
 species_data <- data.frame(
@@ -162,18 +105,8 @@ api_Poec_atr <- api(species_data, ar_var = NULL, use_year = FALSE, flag_sp = FAL
                 flag_month = FALSE, flag_ar = FALSE)
 ```
 
-\#Formatting: This is important for the get_env_vars, tpi, and api
+\#Formatting: This is important for the tpi, and api
 functions as users need to submit dataframes with specific column names.
-
-get_env_vars: needs a dataframe with columns titled: “Lat” and “Lon” -
-for finding geographic locations, and the data in these columns must be
-in decimal degrees.
-
-Depending on the environmental information required different dates can
-be included, but submitted dataframes must have at least a column titled
-“Year”. Other date columns can include “Month” and “Day”. “Year” and
-“Day” must be numeric, but “Month” can be numeric or character (e.g: 1,
-“Jan”, “1”).
 
 tpi: Must contain columns titled: “Tm” and “Binomial”. “Tm” contains a
 temperature value, “Binomial” contains species binomial. “TMax” and
