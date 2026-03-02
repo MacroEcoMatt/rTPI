@@ -16,13 +16,15 @@ Depends:
 Imports:
     climateR,
     dplyr,
-    Rchelsa,
+    Rchelsa (>= 1.0.2),
     terra
 Suggests:
     devtools,
     testthat (>= 3.0.0),
     covr
-Remotes:git::"https://gitlabext.wsl.ch/karger/rchelsa.git", github::mikejohnson51/climateR
+Remotes:  
+    github::mikejohnson51/climateR,
+    https://gitlabext.wsl.ch/karger/rchelsa.git
 License: CC BY 4.0 + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
