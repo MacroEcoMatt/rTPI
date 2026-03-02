@@ -39,11 +39,6 @@ jobs:
           http-user-agent: ${{ matrix.config.http-user-agent }}
           use-public-rspm: true
 
-      - name: Install dependencies
-        run: |
-          install.packages("devtools")
-          devtools::install_git("https://gitlabext.wsl.ch/karger/rchelsa.git")
-        shell: Rscript {0}
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:

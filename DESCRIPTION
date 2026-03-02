@@ -16,11 +16,11 @@ Depends:
 Imports:
     climateR,
     dplyr,
-    Rchelsa,
     terra
 Suggests:
     devtools,
     testthat (>= 3.0.0),
+    Rchelsa,
     covr
 Remotes:  
     github::mikejohnson51/climateR,
