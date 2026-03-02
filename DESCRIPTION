@@ -22,7 +22,7 @@ Suggests:
     devtools,
     testthat (>= 3.0.0),
     covr
-Remotes:git::https://gitlabext.wsl.ch/karger/rchelsa.git, github::mikejohnson51/climateR
+Remotes:git::"https://gitlabext.wsl.ch/karger/rchelsa.git", github::mikejohnson51/climateR
 License: CC BY 4.0 + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
