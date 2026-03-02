@@ -16,7 +16,7 @@ Depends:
 Imports:
     climateR,
     dplyr,
-    Rchelsa (>= 1.0.2),
+    Rchelsa,
     terra
 Suggests:
     devtools,
@@ -24,7 +24,7 @@ Suggests:
     covr
 Remotes:  
     github::mikejohnson51/climateR,
-    https://gitlabext.wsl.ch/karger/rchelsa.git
+    git::https://gitlabext.wsl.ch/karger/rchelsa.git
 License: CC BY 4.0 + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
