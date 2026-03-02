@@ -55,7 +55,6 @@ generate_niche <- function(sp_dist,
                            monthly = TRUE,
                            tmp_units = NULL){
   ##reliant functions####
-
   climater_dap = function(id, args, verbose, dryrun, print.arg = FALSE){
     args$id = id
     if(print.arg){print(args)}
@@ -84,7 +83,7 @@ generate_niche <- function(sp_dist,
     if(is.null(id)){
       catalog = climateR::catalog
     } else {
-      catalog = filter(climateR::catalog, id == !!id)
+      catalog = dplyr::filter(climateR::catalog, id == !!id)
     }
 
     if (nrow(catalog) == 0) {
@@ -92,7 +91,7 @@ generate_niche <- function(sp_dist,
     }
 
     if(!is.null(asset)){
-      catalog = filter(catalog, asset == !!asset)
+      catalog = dplyr::filter(catalog, asset == !!asset)
     }
 
     if (nrow(catalog) == 0) {
@@ -108,11 +107,11 @@ generate_niche <- function(sp_dist,
       u <- unique(catalog$variable)
 
       if (all(varname %in% catalog$variable)) {
-        catalog <- filter(catalog, varname %in% !!varname | variable %in% !!varname)
+        catalog <- dplyr::filter(catalog, varname %in% !!varname | variable %in% !!varname)
       } else {
         bad <- varname[!varname %in% u]
 
-        m <- distinct(select(catalog, variable, description, units))
+        m <- dplyr::distinct(dplyr::select(catalog, variable, description, units))
 
         stop("'", bad, "' not availiable varname for '", catalog$id[1], "'. Try: \n\t",
              paste(">", paste0(m$variable, " [", m$units, "] (", m$description, ")"),
@@ -129,7 +128,7 @@ generate_niche <- function(sp_dist,
       }
 
       if(!is.null(scenario)){
-        catalog <- filter(catalog, scenario %in% !!scenario)
+        catalog <- dplyr::filter(catalog, scenario %in% !!scenario)
       }
     }
 
@@ -147,11 +146,11 @@ generate_niche <- function(sp_dist,
       }
 
       if (all(model %in% catalog$model)) {
-        catalog <- filter(catalog, model %in% !!model)
+        catalog <- dplyr::filter(catalog, model %in% !!model)
       } else {
         bad <- model[!model %in% u]
 
-        m <- distinct(select(catalog, model, ensemble))
+        m <- dplyr::distinct(dplyr::select(catalog, model, ensemble))
 
         stop("'", bad, "' not availiable model for '", catalog$id[1], "'. Try: \n\t",
              paste(">", paste0(m$model, " [", m$ensemble, "]"),
@@ -167,13 +166,13 @@ generate_niche <- function(sp_dist,
     if(!is.null(AOI)){
 
       if(inherits(AOI, "sfc")){
-        AOI = vect(AOI)
+        AOI = terra::vect(AOI)
       }
 
       gid = sapply(1:nrow(catalog), function(x) {
         suppressWarnings({
           tryCatch({
-            sum(terra::is.related(terra::project(terra::ext(AOI), crs(AOI), catalog$crs[x]),
+            sum(terra::is.related(terra::project(terra::ext(AOI), terra::crs(AOI), catalog$crs[x]),
                                   make_vect(catalog[x,]),
                                   "intersects")) > 0
           }, error = function(e) {
@@ -198,12 +197,12 @@ generate_niche <- function(sp_dist,
       endDate = ifelse(is.null(endDate), as.character(startDate), as.character(endDate))
 
       tmp <- catalog %>%
-        mutate(
+        dplyr::mutate(
           s = do.call("rbind", strsplit(duration, "/"))[, 1],
           e = do.call("rbind", strsplit(duration, "/"))[, 2]
         ) %>%
-        mutate(e = ifelse(e == "..", as.character(Sys.Date()), e)) %>%
-        filter(as.Date(e) >= as.Date(startDate) & as.Date(s) <= as.Date(endDate))
+        dplyr::mutate(e = ifelse(e == "..", as.character(Sys.Date()), e)) %>%
+        dplyr::filter(as.Date(e) >= as.Date(startDate) & as.Date(s) <= as.Date(endDate))
 
       if(nrow(tmp) == 0){
         stop("Valid Date Range(s) includes: ",
@@ -224,12 +223,12 @@ generate_niche <- function(sp_dist,
 
     if(eflag) {
       if (all(ensemble %in% catalog$ensemble) | !is.numeric(ensemble)) {
-        catalog <- filter(catalog, ensemble %in% !!ensemble)
+        catalog <- dplyr::filter(catalog, ensemble %in% !!ensemble)
       } else if (is.numeric(ensemble)) {
 
         cond = any(table(catalog$model, catalog$ensemble) > ensemble)
 
-        catalog =  slice_sample(catalog,
+        catalog =  dplyr::slice_sample(catalog,
                                 by = c('id', 'variable', 'model', "scenario"),
                                 n = ensemble)
 
@@ -244,7 +243,7 @@ generate_niche <- function(sp_dist,
       } else {
         bad <- ensemble[!ensemble %in% catalog$ensemble]
 
-        m <- distinct(select(catalog, model, ensemble))
+        m <- dplyr::distinct(dplyr::select(catalog, model, ensemble))
 
         stop(
           "'",
@@ -265,7 +264,7 @@ generate_niche <- function(sp_dist,
 
 
 
-    catalog[!duplicated(select(catalog, -URL)), ]
+    catalog[!duplicated(dplyr::select(catalog, -URL)), ]
   }
   getTerraClim = function(AOI, varname = NULL,
                           startDate = NULL, endDate = NULL,
@@ -356,9 +355,9 @@ generate_niche <- function(sp_dist,
 
       for(g in grp_list){
 
-        cur_grp <- sp_dist %>% filter(Group == g)
+        cur_grp <- sp_dist %>% dplyr::filter(Group == g)
 
-        cur_grp_xy <- vect(cur_grp, geom=c("lon", "lat"),
+        cur_grp_xy <- terra::vect(cur_grp, geom=c("lon", "lat"),
                            crs="+proj=longlat +datum=WGS84")
 
         for(yr in time_period){
@@ -369,8 +368,8 @@ generate_niche <- function(sp_dist,
             tclim <- getTerraClim(cur_grp_xy, varname = c("tmax","tmin","ppt","pet"),
                                   startDate = startdate[[1]])
 
-            df <- data.frame(PPT = suppressWarnings(extract(tclim[[2]],cur_grp_xy)),
-                             PET = suppressWarnings(extract(tclim[[1]],cur_grp_xy)))%>%
+            df <- data.frame(PPT = suppressWarnings(terra::extract(tclim[[2]],cur_grp_xy)),
+                             PET = suppressWarnings(terra::extract(tclim[[1]],cur_grp_xy)))%>%
               dplyr::select(2,4)
 
             colnames(df) <- c("PPT","PET")
@@ -379,19 +378,24 @@ generate_niche <- function(sp_dist,
               dplyr::mutate(AI = ifelse(is.infinite(AI), NA, AI))%>%
               dplyr::filter(!is.na(AI))
 
-            lq <- quantile(df$AI,probs = c(0.25))[[1]]
-            uq <- quantile(df$AI,probs = c(0.75))[[1]]
-            upper_limt <- uq + 1.5*(uq-lq)
-
-            if(max(df$AI) > upper_limt){
-              amax <- upper_limt
+            if(nrow(df) == 0){
+              amax <- NA
+              amin <- NA
             } else {
-              amax <- max(df$ai)
-            }
-            amin <- min(df$AI)
+              lq <- quantile(df$AI,probs = c(0.25))[[1]]
+              uq <- quantile(df$AI,probs = c(0.75))[[1]]
+              upper_limt <- uq + 1.5*(uq-lq)
 
-            tmax <- max(suppressWarnings(extract(tclim[[3]], cur_grp_xy))[,2], na.rm=T)
-            tmin <- min(suppressWarnings(extract(tclim[[4]], cur_grp_xy))[,2], na.rm=T)
+              if(max(df$AI) > upper_limt){
+                amax <- upper_limt
+              } else {
+                amax <- max(df$AI)
+              }
+              amin <- min(df$AI)
+            }
+
+            tmax <- max(suppressWarnings(terra::extract(tclim[[3]], cur_grp_xy))[,2], na.rm=T)
+            tmin <- min(suppressWarnings(terra::extract(tclim[[4]], cur_grp_xy))[,2], na.rm=T)
 
 
             cur_ar <- data.frame(Year = c(yr),
@@ -415,9 +419,9 @@ generate_niche <- function(sp_dist,
 
       for(g in grp_list){
 
-        cur_grp <- sp_dist %>% filter(Group == g)
+        cur_grp <- sp_dist %>% dplyr::filter(Group == g)
 
-        cur_grp_xy <- vect(cur_grp, geom=c("lon", "lat"),
+        cur_grp_xy <- terra::vect(cur_grp, geom=c("lon", "lat"),
                            crs="+proj=longlat +datum=WGS84")
 
         for(yr in time_period){
@@ -428,15 +432,15 @@ generate_niche <- function(sp_dist,
             tclim <- getTerraClim(cur_grp_xy, varname = c("tmax","tmin","ppt"),
                                   startDate = startdate[[1]])
 
-            df <- data.frame(PPT = suppressWarnings(extract(tclim[[1]],cur_grp_xy)))%>%dplyr::select(2)
+            df <- data.frame(PPT = suppressWarnings(terra::extract(tclim[[1]],cur_grp_xy)))%>%dplyr::select(2)
 
             colnames(df) <- c("PPT")
 
             pmin <- min(df$PPT, na.rm=T)
             pmax <- max(df$PPT, na.rm=T)
 
-            tmax <- max(suppressWarnings(extract(tclim[[2]], cur_grp_xy))[,2], na.rm=T)
-            tmin <- min(suppressWarnings(extract(tclim[[3]], cur_grp_xy))[,2], na.rm=T)
+            tmax <- max(suppressWarnings(terra::extract(tclim[[2]], cur_grp_xy))[,2], na.rm=T)
+            tmin <- min(suppressWarnings(terra::extract(tclim[[3]], cur_grp_xy))[,2], na.rm=T)
 
 
             cur_ar <- data.frame(Year = c(yr),
@@ -460,9 +464,9 @@ generate_niche <- function(sp_dist,
 
       for(g in grp_list){
 
-        cur_grp <- sp_dist %>% filter(Group == g)
+        cur_grp <- sp_dist %>% dplyr::filter(Group == g)
 
-        cur_grp_xy <- vect(cur_grp, geom=c("lon", "lat"),
+        cur_grp_xy <- terra::vect(cur_grp, geom=c("lon", "lat"),
                            crs="+proj=longlat +datum=WGS84")
 
         for(yr in time_period){
@@ -473,8 +477,8 @@ generate_niche <- function(sp_dist,
             tclim <- getTerraClim(cur_grp_xy, varname = c("tmax","tmin"),
                                   startDate = startdate[[1]])
 
-            tmax <- max(suppressWarnings(extract(tclim[[1]], cur_grp_xy))[,2], na.rm=T)
-            tmin <- min(suppressWarnings(extract(tclim[[2]], cur_grp_xy))[,2], na.rm=T)
+            tmax <- max(suppressWarnings(terra::extract(tclim[[1]], cur_grp_xy))[,2], na.rm=T)
+            tmin <- min(suppressWarnings(terra::extract(tclim[[2]], cur_grp_xy))[,2], na.rm=T)
 
 
             cur_ar <- data.frame(Year = c(yr),
@@ -496,9 +500,9 @@ generate_niche <- function(sp_dist,
 
       for(g in grp_list){
 
-        cur_grp <- sp_dist %>% filter(Group == g)
+        cur_grp <- sp_dist %>% dplyr::filter(Group == g)
 
-        cur_grp_xy <- vect(cur_grp, geom=c("lon", "lat"),
+        cur_grp_xy <- terra::vect(cur_grp, geom=c("lon", "lat"),
                            crs="+proj=longlat +datum=WGS84")
 
         for(yr in time_period){
@@ -509,8 +513,8 @@ generate_niche <- function(sp_dist,
             tclim <- getTerraClim(cur_grp_xy, varname = c("ppt","pet"),
                                   startDate = startdate[[1]])
 
-            df <- data.frame(PPT = suppressWarnings(extract(tclim[[2]],cur_grp_xy)),
-                             PET = suppressWarnings(extract(tclim[[1]],cur_grp_xy)))%>%
+            df <- data.frame(PPT = suppressWarnings(terra::extract(tclim[[2]],cur_grp_xy)),
+                             PET = suppressWarnings(terra::extract(tclim[[1]],cur_grp_xy)))%>%
               dplyr::select(2,4)
 
             colnames(df) <- c("PPT","PET")
@@ -519,16 +523,21 @@ generate_niche <- function(sp_dist,
               dplyr::mutate(AI = ifelse(is.infinite(AI), NA, AI))%>%
               dplyr::filter(!is.na(AI))
 
-            lq <- quantile(df$AI,probs = c(0.25))[[1]]
-            uq <- quantile(df$AI,probs = c(0.75))[[1]]
-            upper_limt <- uq + 1.5*(uq-lq)
-
-            if(max(df$AI) > upper_limt){
-              amax <- upper_limt
+            if(nrow(df) == 0){
+              amax <- NA
+              amin <- NA
             } else {
-              amax <- max(df$ai)
+              lq <- quantile(df$AI,probs = c(0.25))[[1]]
+              uq <- quantile(df$AI,probs = c(0.75))[[1]]
+              upper_limt <- uq + 1.5*(uq-lq)
+
+              if(max(df$AI) > upper_limt){
+                amax <- upper_limt
+              } else {
+                amax <- max(df$AI)
+              }
+              amin <- min(df$AI)
             }
-            amin <- min(df$AI)
 
             cur_ar <- data.frame(Year = c(yr),
                                  Month = c(m),
@@ -548,9 +557,9 @@ generate_niche <- function(sp_dist,
     else if (niche_vars == "ar" && isTRUE(precip)){
       for(g in grp_list){
 
-        cur_grp <- sp_dist %>% filter(Group == g)
+        cur_grp <- sp_dist %>% dplyr::filter(Group == g)
 
-        cur_grp_xy <- vect(cur_grp, geom=c("lon", "lat"),
+        cur_grp_xy <- terra::vect(cur_grp, geom=c("lon", "lat"),
                            crs="+proj=longlat +datum=WGS84")
 
         for(yr in time_period){
@@ -561,7 +570,7 @@ generate_niche <- function(sp_dist,
             tclim <- getTerraClim(cur_grp_xy, varname = c("ppt"),
                                   startDate = startdate[[1]])
 
-            df <- data.frame(PPT = suppressWarnings(extract(tclim[[1]],cur_grp_xy)))%>%dplyr::select(2)
+            df <- data.frame(PPT = suppressWarnings(terra::extract(tclim[[1]],cur_grp_xy)))%>%dplyr::select(2)
 
             colnames(df) <- c("PPT","PET")
 
@@ -606,27 +615,28 @@ generate_niche <- function(sp_dist,
             tmax <- tclim[[3]]
             tmin <- tclim[[4]]
 
-            crs(pet) <- crs(ppt) <- crs(tmax) <- crs(tmin) <- crs(sp_dist[[sp]])
+            terra::crs(pet) <- terra::crs(ppt) <- terra::crs(tmax) <- terra::crs(tmin) <- terra::crs(sp_dist[[sp]])
 
-            pet <- crop(mask(pet,sp_dist[[sp]]),sp_dist[[sp]])
-            ppt <- crop(mask(ppt,sp_dist[[sp]]),sp_dist[[sp]])
-            tmax <- crop(mask(tmax,sp_dist[[sp]]),sp_dist[[sp]])
-            tmin <- crop(mask(tmin,sp_dist[[sp]]),sp_dist[[sp]])
+            pet <- terra::crop(terra::mask(pet,sp_dist[[sp]]),sp_dist[[sp]])
+            ppt <- terra::crop(terra::mask(ppt,sp_dist[[sp]]),sp_dist[[sp]])
+            tmax <- terra::crop(terra::mask(tmax,sp_dist[[sp]]),sp_dist[[sp]])
+            tmin <- terra::crop(terra::mask(tmin,sp_dist[[sp]]),sp_dist[[sp]])
+
             ai <- ppt/pet
-            ai <- subst(ai,  Inf, NA)
+            ai <- terra::subst(ai,  Inf, NA)
 
-            lq <- global(ai, quantile, na.rm=T)[1,2]
-            uq <- global(ai, quantile, na.rm=T)[1,4]
+            lq <- terra::global(ai, quantile, na.rm=T)[1,2]
+            uq <- terra::global(ai, quantile, na.rm=T)[1,4]
             upper_limt <- uq[1] + 1.5*(uq[1]-lq[1])
 
-            if(global(ai, "max", na.rm=T)[1,1] > upper_limt[1]){
+            if(terra::global(ai, "max", na.rm=T)[1,1] > upper_limt[1]){
               AMax <- upper_limt[1]
             } else {
-              AMax <- global(ai, "max", na.rm=T)[1,1]
+              AMax <- terra::global(ai, "max", na.rm=T)[1,1]
             }
-            AMin <- global(ai, "min", na.rm=T)[1,1]
-            TMax <- global(tmax, "max", na.rm=T)[1,1]
-            TMin <- global(tmin, "min", na.rm=T)[1,1]
+            AMin <- terra::global(ai, "min", na.rm=T)[1,1]
+            TMax <- terra::global(tmax, "max", na.rm=T)[1,1]
+            TMin <- terra::global(tmin, "min", na.rm=T)[1,1]
 
             cur_ar <- data.frame(Year = c(yr),
                                  Month = c(m),
@@ -658,17 +668,17 @@ generate_niche <- function(sp_dist,
             tmax <- tclim[[2]]
             tmin <- tclim[[3]]
 
-            crs(ppt) <- crs(tmax) <- crs(tmin) <- crs(sp_dist[[sp]])
+            terra::crs(ppt) <- terra::crs(tmax) <- terra::crs(tmin) <- terra::crs(sp_dist[[sp]])
 
-            ppt <- crop(mask(ppt,sp_dist[[sp]]),sp_dist[[sp]])
-            tmax <- crop(mask(tmax,sp_dist[[sp]]),sp_dist[[sp]])
-            tmin <- crop(mask(tmin,sp_dist[[sp]]),sp_dist[[sp]])
+            ppt <- terra::crop(terra::mask(ppt,sp_dist[[sp]]),sp_dist[[sp]])
+            tmax <- terra::crop(terra::mask(tmax,sp_dist[[sp]]),sp_dist[[sp]])
+            tmin <- terra::crop(terra::mask(tmin,sp_dist[[sp]]),sp_dist[[sp]])
 
-            PMin <- global(ppt, "min", na.rm=T)[1,1]
-            PMax <- global(ppt, "max", na.rm=T)[1,1]
+            PMin <- terra::global(ppt, "min", na.rm=T)[1,1]
+            PMax <- terra::global(ppt, "max", na.rm=T)[1,1]
 
-            TMax <- global(tmax, "max", na.rm=T)[1,1]
-            TMin <- global(tmin, "min", na.rm=T)[1,1]
+            TMax <- terra::global(tmax, "max", na.rm=T)[1,1]
+            TMin <- terra::global(tmin, "min", na.rm=T)[1,1]
 
             cur_ar <- data.frame(Year = c(yr),
                                  Month = c(m),
@@ -703,14 +713,14 @@ generate_niche <- function(sp_dist,
             tmax <- tclim[[1]]
             tmin <- tclim[[2]]
 
-            crs(tmax) <- crs(tmin) <- crs(sp_dist[[sp]])
+            terra::crs(tmax) <- terra::crs(tmin) <- terra::crs(sp_dist[[sp]])
 
 
-            tmax <- crop(mask(tmax,sp_dist[[sp]]),sp_dist[[sp]])
-            tmin <- crop(mask(tmin,sp_dist[[sp]]),sp_dist[[sp]])
+            tmax <- terra::crop(terra::mask(tmax,sp_dist[[sp]]),sp_dist[[sp]])
+            tmin <- terra::crop(terra::mask(tmin,sp_dist[[sp]]),sp_dist[[sp]])
 
-            TMax <- global(tmax, "max", na.rm=T)[1,1]
-            TMin <- global(tmin, "min", na.rm=T)[1,1]
+            TMax <- terra::global(tmax, "max", na.rm=T)[1,1]
+            TMin <- terra::global(tmin, "min", na.rm=T)[1,1]
 
             cur_ar <- data.frame(Year = c(yr),
                                  Month = c(m),
@@ -742,23 +752,23 @@ generate_niche <- function(sp_dist,
             ppt <- tclim[[2]]
 
 
-            crs(pet) <- crs(ppt) <- crs(sp_dist[[sp]])
+            terra::crs(pet) <- terra::crs(ppt) <- terra::crs(sp_dist[[sp]])
 
-            pet <- crop(mask(pet,sp_dist[[sp]]),sp_dist[[sp]])
-            ppt <- crop(mask(ppt,sp_dist[[sp]]),sp_dist[[sp]])
+            pet <- terra::crop(terra::mask(pet,sp_dist[[sp]]),sp_dist[[sp]])
+            ppt <- terra::crop(terra::mask(ppt,sp_dist[[sp]]),sp_dist[[sp]])
             ai <- ppt/pet
-            ai <- subst(ai,  Inf, NA)
+            ai <- terra::subst(ai,  Inf, NA)
 
-            lq <- global(ai, quantile, na.rm=T)[1,2]
-            uq <- global(ai, quantile, na.rm=T)[1,4]
+            lq <- terra::global(ai, quantile, na.rm=T)[1,2]
+            uq <- terra::global(ai, quantile, na.rm=T)[1,4]
             upper_limt <- uq[1] + 1.5*(uq[1]-lq[1])
 
-            if(global(ai, "max", na.rm=T)[1,1] > upper_limt[1]){
+            if(terra::global(ai, "max", na.rm=T)[1,1] > upper_limt[1]){
               AMax <- upper_limt[1]
             } else {
-              AMax <- global(ai, "max", na.rm=T)[1,1]
+              AMax <- terra::global(ai, "max", na.rm=T)[1,1]
             }
-            AMin <- global(ai, "min", na.rm=T)[1,1]
+            AMin <- terra::global(ai, "min", na.rm=T)[1,1]
 
             cur_ar <- data.frame(Year = c(yr),
                                  Month = c(m),
@@ -788,13 +798,12 @@ generate_niche <- function(sp_dist,
             ppt <- tclim[[1]]
 
 
-            crs(ppt) <- crs(sp_dist[[sp]])
+            terra::crs(ppt) <- terra::crs(sp_dist[[sp]])
 
-            pet <- crop(mask(pet,sp_dist[[sp]]),sp_dist[[sp]])
-            ppt <- crop(mask(ppt,sp_dist[[sp]]),sp_dist[[sp]])
+            pet <- terra::crop(terra::mask(pet,sp_dist[[sp]]),sp_dist[[sp]])
 
-            PMin <- global(ppt, "min", na.rm=T)[1,1]
-            PMax <- global(ppt, "max", na.rm=T)[1,1]
+            PMin <- terra::global(ppt, "min", na.rm=T)[1,1]
+            PMax <- terra::global(ppt, "max", na.rm=T)[1,1]
 
             cur_ar <- data.frame(Year = c(yr),
                                  Month = c(m),
@@ -831,27 +840,27 @@ generate_niche <- function(sp_dist,
           tmax <- tclim[[3]]
           tmin <- tclim[[4]]
 
-          crs(pet) <- crs(ppt) <- crs(tmax) <- crs(tmin) <- crs(sp_dist[1])
+          terra::crs(pet) <- terra::crs(ppt) <- terra::crs(tmax) <- terra::crs(tmin) <- terra::crs(sp_dist)
 
-          pet <- crop(mask(pet,sp_dist[1]),sp_dist[1])
-          ppt <- crop(mask(ppt,sp_dist[1]),sp_dist[1])
-          tmax <- crop(mask(tmax,sp_dist[1]),sp_dist[1])
-          tmin <- crop(mask(tmin,sp_dist[1]),sp_dist[1])
+          pet <- terra::crop(terra::mask(pet,sp_dist),sp_dist)
+          ppt <- terra::crop(terra::mask(ppt,sp_dist),sp_dist)
+          tmax <- terra::crop(terra::mask(tmax,sp_dist),sp_dist)
+          tmin <- terra::crop(terra::mask(tmin,sp_dist),sp_dist)
           ai <- ppt/pet
-          ai <- subst(ai,  Inf, NA)
+          ai <- terra::subst(ai,  Inf, NA)
 
-          lq <- global(ai, quantile, na.rm=T)[1,2]
-          uq <- global(ai, quantile, na.rm=T)[1,4]
+          lq <- terra::global(ai, quantile, na.rm=T)[1,2]
+          uq <- terra::global(ai, quantile, na.rm=T)[1,4]
           upper_limt <- uq[1] + 1.5*(uq[1]-lq[1])
 
-          if(global(ai, "max", na.rm=T)[1,1] > upper_limt[1]){
+          if(terra::global(ai, "max", na.rm=T)[1,1] > upper_limt[1]){
             AMax <- upper_limt[1]
           } else {
-            AMax <- global(ai, "max", na.rm=T)[1,1]
+            AMax <- terra::global(ai, "max", na.rm=T)[1,1]
           }
-          AMin <- global(ai, "min", na.rm=T)[1,1]
-          TMax <- global(tmax, "max", na.rm=T)[1,1]
-          TMin <- global(tmin, "min", na.rm=T)[1,1]
+          AMin <- terra::global(ai, "min", na.rm=T)[1,1]
+          TMax <- terra::global(tmax, "max", na.rm=T)[1,1]
+          TMin <- terra::global(tmin, "min", na.rm=T)[1,1]
 
           cur_ar <- data.frame(Year = c(yr),
                                Month = c(m),
@@ -880,17 +889,17 @@ generate_niche <- function(sp_dist,
           tmax <- tclim[[2]]
           tmin <- tclim[[3]]
 
-          crs(ppt) <- crs(tmax) <- crs(tmin) <- crs(sp_dist[1])
+          terra::crs(ppt) <- terra::crs(tmax) <- terra::crs(tmin) <- terra::crs(sp_dist)
 
-          ppt <- crop(mask(ppt,sp_dist[1]),sp_dist[1])
-          tmax <- crop(mask(tmax,sp_dist[1]),sp_dist[1])
-          tmin <- crop(mask(tmin,sp_dist[1]),sp_dist[1])
+          ppt <- terra::crop(terra::mask(ppt,sp_dist),sp_dist)
+          tmax <- terra::crop(terra::mask(tmax,sp_dist),sp_dist)
+          tmin <- terra::crop(terra::mask(tmin,sp_dist),sp_dist)
 
-          PMin <- global(ppt, "min", na.rm=T)[1,1]
-          PMax <- global(ppt, "max", na.rm=T)[1,1]
+          PMin <- terra::global(ppt, "min", na.rm=T)[1,1]
+          PMax <- terra::global(ppt, "max", na.rm=T)[1,1]
 
-          TMax <- global(tmax, "max", na.rm=T)[1,1]
-          TMin <- global(tmin, "min", na.rm=T)[1,1]
+          TMax <- terra::global(tmax, "max", na.rm=T)[1,1]
+          TMin <- terra::global(tmin, "min", na.rm=T)[1,1]
 
           cur_ar <- data.frame(Year = c(yr),
                                Month = c(m),
@@ -920,14 +929,14 @@ generate_niche <- function(sp_dist,
           tmax <- tclim[[1]]
           tmin <- tclim[[2]]
 
-          crs(tmax) <- crs(tmin) <- crs(sp_dist[1])
+          terra::crs(tmax) <- terra::crs(tmin) <- terra::crs(sp_dist)
 
 
-          tmax <- crop(mask(tmax,sp_dist[1]),sp_dist[1])
-          tmin <- crop(mask(tmin,sp_dist[1]),sp_dist[1])
+          tmax <- terra::crop(terra::mask(tmax,sp_dist),sp_dist)
+          tmin <- terra::crop(terra::mask(tmin,sp_dist),sp_dist)
 
-          TMax <- global(tmax, "max", na.rm=T)[1,1]
-          TMin <- global(tmin, "min", na.rm=T)[1,1]
+          TMax <- terra::global(tmax, "max", na.rm=T)[1,1]
+          TMin <- terra::global(tmin, "min", na.rm=T)[1,1]
 
           cur_ar <- data.frame(Year = c(yr),
                                Month = c(m),
@@ -955,23 +964,23 @@ generate_niche <- function(sp_dist,
           ppt <- tclim[[2]]
 
 
-          crs(pet) <- crs(ppt) <- crs(sp_dist[1])
+          terra::crs(pet) <- terra::crs(ppt) <- terra::crs(sp_dist)
 
-          pet <- crop(mask(pet,sp_dist[1]),sp_dist[1])
-          ppt <- crop(mask(ppt,sp_dist[1]),sp_dist[1])
+          pet <- terra::crop(terra::mask(pet,sp_dist),sp_dist)
+          ppt <- terra::crop(terra::mask(ppt,sp_dist),sp_dist)
           ai <- ppt/pet
-          ai <- subst(ai,  Inf, NA)
+          ai <- terra::subst(ai,  Inf, NA)
 
-          lq <- global(ai, quantile, na.rm=T)[1,2]
-          uq <- global(ai, quantile, na.rm=T)[1,4]
+          lq <- terra::global(ai, quantile, na.rm=T)[1,2]
+          uq <- terra::global(ai, quantile, na.rm=T)[1,4]
           upper_limt <- uq[1] + 1.5*(uq[1]-lq[1])
 
-          if(global(ai, "max", na.rm=T)[1,1] > upper_limt[1]){
+          if(terra::global(ai, "max", na.rm=T)[1,1] > upper_limt[1]){
             AMax <- upper_limt[1]
           } else {
-            AMax <- global(ai, "max", na.rm=T)[1,1]
+            AMax <- terra::global(ai, "max", na.rm=T)[1,1]
           }
-          AMin <- global(ai, "min", na.rm=T)[1,1]
+          AMin <- terra::global(ai, "min", na.rm=T)[1,1]
 
           cur_ar <- data.frame(Year = c(yr),
                                Month = c(m),
@@ -997,13 +1006,12 @@ generate_niche <- function(sp_dist,
           ppt <- tclim[[1]]
 
 
-         crs(ppt) <- crs(sp_dist[1])
+          terra::crs(ppt) <- terra::crs(sp_dist)
 
-          pet <- crop(mask(pet,sp_dist[1]),sp_dist[1])
-          ppt <- crop(mask(ppt,sp_dist[1]),sp_dist[1])
+          ppt <- terra::crop(mask(ppt,sp_dist),sp_dist)
 
-          PMin <- global(ppt, "min", na.rm=T)[1,1]
-          PMax <- global(ppt, "max", na.rm=T)[1,1]
+          PMin <- terra::global(ppt, "min", na.rm=T)[1,1]
+          PMax <- terra::global(ppt, "max", na.rm=T)[1,1]
 
           cur_ar <- data.frame(Year = c(yr),
                                Month = c(m),
@@ -1038,8 +1046,8 @@ generate_niche <- function(sp_dist,
 
   else if (isTRUE(is.data.frame(sp_dist))){
     if(isFALSE(monthly)){
-      grp_all_df <- grp_all_df %>%
-        dplyr::select(-Month) %>%
+      grp_all_df <- grp_all_df[,-1]
+      grp_all_df <- grp_all_df%>%
         dplyr::group_by(Group)%>%
         dplyr::summarise_all(mean, na.rm=T)
     }
@@ -1059,8 +1067,8 @@ generate_niche <- function(sp_dist,
            isFALSE(is.data.frame(sp_dist)) &&
            isTRUE(class(sp_dist[[1]]) =="SpatVector")){
     if(isFALSE(monthly)){
+      all_df <- all_df[,-1]
       all_df <- all_df %>%
-        dplyr::select(-Month) %>%
         dplyr::group_by(List_Position)%>%
         dplyr::summarise_all(mean,na.rm=T)
     }

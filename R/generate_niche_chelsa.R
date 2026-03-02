@@ -57,6 +57,7 @@ generate_niche_chelsa <- function(sp_dist,
                            monthly = TRUE,
                            tmp_units = NULL){
   ##reliant functions####
+  library(Rchelsa)
   getChelsa <- function(var, date = NULL, coords = NULL, extent = NULL,
                         startdate = NULL, enddate = NULL,
                         protocol = "vsicurl", verbose = FALSE,
@@ -435,10 +436,9 @@ generate_niche_chelsa <- function(sp_dist,
 
       for(g in grp_list){
 
-        cur_grp <- sp_dist %>% filter(Group == g)
+        cur_grp <- sp_dist %>% dplyr::filter(Group == g)
 
-        cur_grp_xy <- vect(cur_grp, geom=c("lon", "lat"),
-                           crs="+proj=longlat +datum=WGS84")
+        cur_grp_xy <- cur_grp[,c("lon","lat")]
 
         for(yr in time_period){
           for(m in months){
@@ -446,43 +446,49 @@ generate_niche_chelsa <- function(sp_dist,
             startdate <- as.Date(paste0(yr,"-",m,"-15"))
 
             #TMAX
-            tasmax <- getChelsa("tasmax", extent = ext(cur_grp_xy),
+            tasmax <- (t(getChelsa("tasmax", coords = cur_grp_xy,
                                startdate = startdate, enddate = startdate,
-                               dataset = "chelsa-monthly")
+                               dataset = "chelsa-monthly")))[-1,]
 
-            tmax <- max(suppressWarnings(extract(tasmax, cur_grp_xy))[,2],na.rm=T)
+            tmax <- max(tasmax, na.rm=T)
             rm(tasmax)
             gc()
             #TMIN
-            tasmin <- getChelsa("tasmin", extent = ext(cur_grp_xy),
+            tasmin <- (t(getChelsa("tasmin", coords = cur_grp_xy,
                                 startdate = startdate, enddate = startdate,
-                                dataset = "chelsa-monthly")
+                                dataset = "chelsa-monthly")))[-1,]
 
-            tmin <- min(suppressWarnings(extract(tasmin, cur_grp_xy))[,2],na.rm=T)
+            tmin <- min(tasmin, na.rm=T)
             rm(tasmin)
             gc()
             #AI
-            pet <- getChelsa("pet", extent = ext(cur_grp_xy),
+            pet <- t(getChelsa("pet", coords = cur_grp_xy,
                                 startdate = startdate, enddate = startdate,
-                                dataset = "chelsa-monthly")
-            pr <- getChelsa("pr", extent = ext(cur_grp_xy),
+                                dataset = "chelsa-monthly"))
+            pr <- t(getChelsa("pr", coords = cur_grp_xy,
                             startdate = startdate, enddate = startdate,
-                            dataset = "chelsa-monthly")
-            ai <- pr/pet
-            ai <- subst(ai, Inf, NA)
+                            dataset = "chelsa-monthly"))
 
-            ai_ext <- suppressWarnings(extract(ai, cur_grp_xy))[,2]
 
-            lq <- quantile(ai_ext, probs = c(0.25),na.rm=T)[[1]]
-            uq <- quantile(ai_ext, probs = c(0.75),na.rm=T)[[1]]
-            upper_limt <- uq + 1.5*(uq-lq)
+            ai <- data.frame(AI = pr/pet)
+            ai <- ai[-1,]
+            ai[is.infinite(ai)] <- NA
 
-            if(max(ai_ext, na.rm=T) > upper_limt){
-              amax <- upper_limt
-            } else {
-              amax <- max(ai_ext, na.rm=T)
+            if(length(na.omit(ai))==0){
+              amax <- NA
+              amin <- NA
+            }else {
+              lq <- quantile(ai, probs = c(0.25),na.rm=T)[[1]]
+              uq <- quantile(ai, probs = c(0.75),na.rm=T)[[1]]
+              upper_limt <- uq + 1.5*(uq-lq)
+
+              if(max(ai, na.rm=T) > upper_limt){
+                amax <- upper_limt
+              } else {
+                amax <- max(ai, na.rm=T)
+              }
+              amin <- min(ai, na.rm=T)
             }
-            amin <- min(ai_ext, na.rm=T)
 
             rm(pet, pr, ai)
             gc()
@@ -508,10 +514,9 @@ generate_niche_chelsa <- function(sp_dist,
 
       for(g in grp_list){
 
-        cur_grp <- sp_dist %>% filter(Group == g)
+        cur_grp <- sp_dist %>% dplyr::filter(Group == g)
 
-        cur_grp_xy <- vect(cur_grp, geom=c("lon", "lat"),
-                           crs="+proj=longlat +datum=WGS84")
+        cur_grp_xy <- cur_grp[,c("lon","lat")]
 
         for(yr in time_period){
           for(m in months){
@@ -519,29 +524,29 @@ generate_niche_chelsa <- function(sp_dist,
             startdate <- as.Date(paste0(yr,"-",m,"-15"))
 
             #TMAX
-            tasmax <- getChelsa("tasmax", extent = ext(cur_grp_xy),
-                                startdate = startdate, enddate = startdate,
-                                dataset = "chelsa-monthly")
+            tasmax <- (t(getChelsa("tasmax", coords = cur_grp_xy,
+                                   startdate = startdate, enddate = startdate,
+                                   dataset = "chelsa-monthly")))[-1,]
 
-            tmax <- max(suppressWarnings(extract(tasmax, cur_grp_xy))[,2],na.rm=T)
+            tmax <- max(tasmax, na.rm=T)
             rm(tasmax)
             gc()
             #TMIN
-            tasmin <- getChelsa("tasmin", extent = ext(cur_grp_xy),
-                                startdate = startdate, enddate = startdate,
-                                dataset = "chelsa-monthly")
+            tasmin <- (t(getChelsa("tasmin", coords = cur_grp_xy,
+                                   startdate = startdate, enddate = startdate,
+                                   dataset = "chelsa-monthly")))[-1,]
 
-            tmin <- min(suppressWarnings(extract(tasmin, cur_grp_xy))[,2],na.rm=T)
+            tmin <- min(tasmin, na.rm=T)
             rm(tasmin)
             gc()
             #AI
 
-            pr <- getChelsa("pr", extent = ext(cur_grp_xy),
+            pr <- (t(getChelsa("pr", coords =cur_grp_xy,
                             startdate = startdate, enddate = startdate,
-                            dataset = "chelsa-monthly")
+                            dataset = "chelsa-monthly")))[-1,]
 
-            pmin <- min(suppressWarnings(extract(pr, cur_grp_xy))[,2],na.rm=T)
-            pmax <- max(suppressWarnings(extract(pr, cur_grp_xy))[,2],na.rm=T)
+            pmin <- min(pr, na.rm=T)
+            pmax <- max(pr, na.rm=T)
 
             rm(pr)
             gc()
@@ -567,10 +572,9 @@ generate_niche_chelsa <- function(sp_dist,
 
       for(g in grp_list){
 
-        cur_grp <- sp_dist %>% filter(Group == g)
+        cur_grp <- sp_dist %>% dplyr::filter(Group == g)
 
-        cur_grp_xy <- vect(cur_grp, geom=c("lon", "lat"),
-                           crs="+proj=longlat +datum=WGS84")
+        cur_grp_xy <- cur_grp[,c("lon","lat")]
 
         for(yr in time_period){
           for(m in months){
@@ -578,19 +582,19 @@ generate_niche_chelsa <- function(sp_dist,
             startdate <- as.Date(paste0(yr,"-",m,"-15"))
 
             #TMAX
-            tasmax <- getChelsa("tasmax", extent = ext(cur_grp_xy),
-                                startdate = startdate, enddate = startdate,
-                                dataset = "chelsa-monthly")
+            tasmax <- (t(getChelsa("tasmax", coords = cur_grp_xy,
+                                   startdate = startdate, enddate = startdate,
+                                   dataset = "chelsa-monthly")))[-1,]
 
-            tmax <- max(suppressWarnings(extract(tasmax, cur_grp_xy))[,2],na.rm=T)
+            tmax <- max(tasmax, na.rm=T)
             rm(tasmax)
             gc()
             #TMIN
-            tasmin <- getChelsa("tasmin", extent = ext(cur_grp_xy),
-                                startdate = startdate, enddate = startdate,
-                                dataset = "chelsa-monthly")
+            tasmin <- (t(getChelsa("tasmin", coords = cur_grp_xy,
+                                   startdate = startdate, enddate = startdate,
+                                   dataset = "chelsa-monthly")))[-1,]
 
-            tmin <- min(suppressWarnings(extract(tasmin, cur_grp_xy))[,2],na.rm=T)
+            tmin <- min(tasmin, na.rm=T)
             rm(tasmin)
             gc()
 
@@ -613,10 +617,9 @@ generate_niche_chelsa <- function(sp_dist,
 
       for(g in grp_list){
 
-        cur_grp <- sp_dist %>% filter(Group == g)
+        cur_grp <- sp_dist %>% dplyr::filter(Group == g)
 
-        cur_grp_xy <- vect(cur_grp, geom=c("lon", "lat"),
-                           crs="+proj=longlat +datum=WGS84")
+        cur_grp_xy <- cur_grp[,c("lon","lat")]
 
         for(yr in time_period){
           for(m in months){
@@ -624,28 +627,33 @@ generate_niche_chelsa <- function(sp_dist,
             startdate <- as.Date(paste0(yr,"-",m,"-15"))
 
             #AI
-            pet <- getChelsa("pet", extent = ext(cur_grp_xy),
-                             startdate = startdate, enddate = startdate,
-                             dataset = "chelsa-monthly")
-            pr <- getChelsa("pr", extent = ext(cur_grp_xy),
-                            startdate = startdate, enddate = startdate,
-                            dataset = "chelsa-monthly")
-            ai <- pr/pet
-            ai <- subst(ai, Inf, NA)
+            pet <- t(getChelsa("pet", coords = cur_grp_xy,
+                               startdate = startdate, enddate = startdate,
+                               dataset = "chelsa-monthly"))
+            pr <- t(getChelsa("pr", coords = cur_grp_xy,
+                              startdate = startdate, enddate = startdate,
+                              dataset = "chelsa-monthly"))
 
-            ai_ext <- suppressWarnings(extract(ai, cur_grp_xy))[,2]
 
-            lq <- quantile(ai_ext, probs = c(0.25),na.rm=T)[[1]]
-            uq <- quantile(ai_ext, probs = c(0.75),na.rm=T)[[1]]
-            upper_limt <- uq + 1.5*(uq-lq)
+            ai <- data.frame(AI = pr/pet)
+            ai <- ai[-1,]
+            ai[is.infinite(ai)] <- NA
 
-            if(max(ai_ext, na.rm=T) > upper_limt){
-              amax <- upper_limt
-            } else {
-              amax <- max(ai_ext, na.rm=T)
+            if(length(na.omit(ai))==0){
+              amax <- NA
+              amin <- NA
+            }else {
+              lq <- quantile(ai, probs = c(0.25),na.rm=T)[[1]]
+              uq <- quantile(ai, probs = c(0.75),na.rm=T)[[1]]
+              upper_limt <- uq + 1.5*(uq-lq)
+
+              if(max(ai, na.rm=T) > upper_limt){
+                amax <- upper_limt
+              } else {
+                amax <- max(ai, na.rm=T)
+              }
+              amin <- min(ai, na.rm=T)
             }
-            amin <- min(ai_ext, na.rm=T)
-
             rm(pet, pr, ai)
             gc()
 
@@ -667,22 +675,22 @@ generate_niche_chelsa <- function(sp_dist,
     else if (niche_vars == "ar" && isTRUE(precip)){
       for(g in grp_list){
 
-        cur_grp <- sp_dist %>% filter(Group == g)
+        cur_grp <- sp_dist %>% dplyr::filter(Group == g)
 
-        cur_grp_xy <- vect(cur_grp, geom=c("lon", "lat"),
-                           crs="+proj=longlat +datum=WGS84")
+        cur_grp_xy <- cur_grp[,c("lon","lat")]
 
         for(yr in time_period){
           for(m in months){
 
             startdate <- as.Date(paste0(yr,"-",m,"-15"))
 
-            pr <- getChelsa("pr", extent = ext(cur_grp_xy),
-                            startdate = startdate, enddate = startdate,
-                            dataset = "chelsa-monthly")
 
-            pmin <- min(suppressWarnings(extract(pr, cur_grp_xy))[,2],na.rm=T)
-            pmax <- max(suppressWarnings(extract(pr, cur_grp_xy))[,2],na.rm=T)
+            pr <- (t(getChelsa("pr", coords = cur_grp_xy,
+                            startdate = startdate, enddate = startdate,
+                            dataset = "chelsa-monthly")))[-1,]
+
+            pmin <- min(pr, na.rm=T)
+            pmax <- max(pr, na.rm=T)
 
             rm(pr)
             gc()
@@ -719,43 +727,52 @@ generate_niche_chelsa <- function(sp_dist,
             startdate <- as.Date(paste0(yr,"-",m,"-15"))
 
             #TMAX
-            tasmax <- getChelsa("tasmax", extent = ext(sp_dist[[sp]]),
+            tasmax <- getChelsa("tasmax", extent = terra::ext(sp_dist[[sp]]),
                                 startdate = startdate, enddate = startdate,
                                 dataset = "chelsa-monthly")
 
-            tmax <- max(suppressWarnings(extract(tasmax, sp_dist[[sp]]))[,2],na.rm=T)
+            tmax <- max(suppressWarnings(terra::extract(tasmax, sp_dist[[sp]]))[,2],na.rm=T)
             rm(tasmax)
             gc()
             #TMIN
-            tasmin <- getChelsa("tasmin", extent = ext(sp_dist[[sp]]),
+            tasmin <- getChelsa("tasmin", extent = terra::ext(sp_dist[[sp]]),
                                 startdate = startdate, enddate = startdate,
                                 dataset = "chelsa-monthly")
 
-            tmin <- min(suppressWarnings(extract(tasmin, sp_dist[[sp]]))[,2],na.rm=T)
+            tmin <- min(suppressWarnings(terra::extract(tasmin, sp_dist[[sp]]))[,2],na.rm=T)
             rm(tasmin)
             gc()
             #AI
-            pet <- getChelsa("pet", extent = ext(sp_dist[[sp]]),
+            pet <- getChelsa("pet", extent = terra::ext(sp_dist[[sp]]),
                              startdate = startdate, enddate = startdate,
                              dataset = "chelsa-monthly")
-            pr <- getChelsa("pr", extent = ext(sp_dist[[sp]]),
+            pr <- getChelsa("pr", extent = terra::ext(sp_dist[[sp]]),
                             startdate = startdate, enddate = startdate,
                             dataset = "chelsa-monthly")
             ai <- pr/pet
-            ai <- subst(ai, Inf, NA)
+            ai <- terra::subst(ai, Inf, NA)
 
-            ai_ext <- suppressWarnings(extract(ai, sp_dist[[sp]]))[,2]
+            ai_ext <- suppressWarnings(terra::extract(ai, sp_dist[[sp]]))[,2]
 
-            lq <- quantile(ai_ext, probs = c(0.25),na.rm=T)[[1]]
-            uq <- quantile(ai_ext, probs = c(0.75),na.rm=T)[[1]]
-            upper_limt <- uq + 1.5*(uq-lq)
+            ai_ext <- na.omit(ai_ext)
 
-            if(max(ai_ext, na.rm=T) > upper_limt){
-              amax <- upper_limt
+            if(length(ai_ext) == 0){
+              amax <- NA
+              amin <- NA
+
             } else {
-              amax <- max(ai_ext, na.rm=T)
+              lq <- quantile(ai_ext, probs = c(0.25),na.rm=T)[[1]]
+              uq <- quantile(ai_ext, probs = c(0.75),na.rm=T)[[1]]
+              upper_limt <- uq + 1.5*(uq-lq)
+
+              if(max(ai_ext, na.rm=T) > upper_limt){
+                amax <- upper_limt
+              } else {
+                amax <- max(ai_ext, na.rm=T)
+              }
+              amin <- min(ai_ext, na.rm=T)
+
             }
-            amin <- min(ai_ext, na.rm=T)
 
             rm(pet, pr, ai)
             gc()
@@ -785,28 +802,28 @@ generate_niche_chelsa <- function(sp_dist,
             startdate <- as.Date(paste0(yr,"-",m,"-15"))
 
             #TMAX
-            tasmax <- getChelsa("tasmax", extent = ext(sp_dist[[sp]]),
+            tasmax <- getChelsa("tasmax", extent = terra::ext(sp_dist[[sp]]),
                                 startdate = startdate, enddate = startdate,
                                 dataset = "chelsa-monthly")
 
-            tmax <- max(suppressWarnings(extract(tasmax, sp_dist[[sp]]))[,2],na.rm=T)
+            tmax <- max(suppressWarnings(terra::extract(tasmax, sp_dist[[sp]]))[,2],na.rm=T)
             rm(tasmax)
             gc()
             #TMIN
-            tasmin <- getChelsa("tasmin", extent = ext(sp_dist[[sp]]),
+            tasmin <- getChelsa("tasmin", extent = terra::ext(sp_dist[[sp]]),
                                 startdate = startdate, enddate = startdate,
                                 dataset = "chelsa-monthly")
 
-            tmin <- min(suppressWarnings(extract(tasmin, sp_dist[[sp]]))[,2],na.rm=T)
+            tmin <- min(suppressWarnings(terra::extract(tasmin, sp_dist[[sp]]))[,2],na.rm=T)
             rm(tasmin)
             gc()
             #AI
-            pr <- getChelsa("pr", extent = ext(sp_dist[[sp]]),
+            pr <- getChelsa("pr", extent = terra::ext(sp_dist[[sp]]),
                             startdate = startdate, enddate = startdate,
                             dataset = "chelsa-monthly")
 
-            pmin <- min(suppressWarnings(extract(pr, sp_dist[[sp]]))[,2],na.rm=T)
-            pmax <- max(suppressWarnings(extract(pr, sp_dist[[sp]]))[,2],na.rm=T)
+            pmin <- min(suppressWarnings(terra::extract(pr, sp_dist[[sp]]))[,2],na.rm=T)
+            pmax <- max(suppressWarnings(terra::extract(pr, sp_dist[[sp]]))[,2],na.rm=T)
 
             rm(pr)
             gc()
@@ -838,19 +855,19 @@ generate_niche_chelsa <- function(sp_dist,
             startdate <- as.Date(paste0(yr,"-",m,"-15"))
 
             #TMAX
-            tasmax <- getChelsa("tasmax", extent = ext(sp_dist[[sp]]),
+            tasmax <- getChelsa("tasmax", extent = terra::ext(sp_dist[[sp]]),
                                 startdate = startdate, enddate = startdate,
                                 dataset = "chelsa-monthly")
 
-            tmax <- max(suppressWarnings(extract(tasmax, sp_dist[[sp]]))[,2],na.rm=T)
+            tmax <- max(suppressWarnings(terra::extract(tasmax, sp_dist[[sp]]))[,2],na.rm=T)
             rm(tasmax)
             gc()
             #TMIN
-            tasmin <- getChelsa("tasmin", extent = ext(sp_dist[[sp]]),
+            tasmin <- getChelsa("tasmin", extent = terra::ext(sp_dist[[sp]]),
                                 startdate = startdate, enddate = startdate,
                                 dataset = "chelsa-monthly")
 
-            tmin <- min(suppressWarnings(extract(tasmin, sp_dist[[sp]]))[,2],na.rm=T)
+            tmin <- min(suppressWarnings(terra::extract(tasmin, sp_dist[[sp]]))[,2],na.rm=T)
             rm(tasmin)
             gc()
 
@@ -879,28 +896,34 @@ generate_niche_chelsa <- function(sp_dist,
             startdate <- as.Date(paste0(yr,"-",m,"-15"))
 
             #AI
-            pet <- getChelsa("pet", extent = ext(sp_dist[[sp]]),
+            pet <- getChelsa("pet", extent = terra::ext(sp_dist[[sp]]),
                              startdate = startdate, enddate = startdate,
                              dataset = "chelsa-monthly")
-            pr <- getChelsa("pr", extent = ext(sp_dist[[sp]]),
+            pr <- getChelsa("pr", extent = terra::ext(sp_dist[[sp]]),
                             startdate = startdate, enddate = startdate,
                             dataset = "chelsa-monthly")
             ai <- pr/pet
-            ai <- subst(ai, Inf, NA)
+            ai <- terra::subst(ai, Inf, NA)
 
-            ai_ext <- suppressWarnings(extract(ai, sp_dist[[sp]]))[,2]
+            ai_ext <- suppressWarnings(terra::extract(ai, sp_dist[[sp]]))[,2]
+            ai_ext <- na.omit(ai_ext)
+            if(length(ai_ext) == 0){
+              amax <- NA
+              amin <- NA
 
-            lq <- quantile(ai_ext, probs = c(0.25),na.rm=T)[[1]]
-            uq <- quantile(ai_ext, probs = c(0.75),na.rm=T)[[1]]
-            upper_limt <- uq + 1.5*(uq-lq)
-
-            if(max(ai_ext, na.rm=T) > upper_limt){
-              amax <- upper_limt
             } else {
-              amax <- max(ai_ext, na.rm=T)
-            }
-            amin <- min(ai_ext, na.rm=T)
+              lq <- quantile(ai_ext, probs = c(0.25),na.rm=T)[[1]]
+              uq <- quantile(ai_ext, probs = c(0.75),na.rm=T)[[1]]
+              upper_limt <- uq + 1.5*(uq-lq)
 
+              if(max(ai_ext, na.rm=T) > upper_limt){
+                amax <- upper_limt
+              } else {
+                amax <- max(ai_ext, na.rm=T)
+              }
+              amin <- min(ai_ext, na.rm=T)
+
+            }
             rm(pet, pr, ai)
             gc()
 
@@ -927,12 +950,12 @@ generate_niche_chelsa <- function(sp_dist,
 
             startdate <- as.Date(paste0(yr,"-",m,"-15"))
 
-            pr <- getChelsa("pr", extent = ext(sp_dist[[sp]]),
+            pr <- getChelsa("pr", extent = terra::ext(sp_dist[[sp]]),
                             startdate = startdate, enddate = startdate,
                             dataset = "chelsa-monthly")
 
-            pmin <- min(suppressWarnings(extract(pr, sp_dist[[sp]]))[,2],na.rm=T)
-            pmax <- max(suppressWarnings(extract(pr, sp_dist[[sp]]))[,2],na.rm=T)
+            pmin <- min(suppressWarnings(terra::extract(pr, sp_dist[[sp]]))[,2],na.rm=T)
+            pmax <- max(suppressWarnings(terra::extract(pr, sp_dist[[sp]]))[,2],na.rm=T)
 
             rm(pr)
             gc()
@@ -966,43 +989,51 @@ generate_niche_chelsa <- function(sp_dist,
           startdate <- as.Date(paste0(yr,"-",m,"-15"))
 
           #TMAX
-          tasmax <- getChelsa("tasmax", extent = ext(sp_dist),
+          tasmax <- getChelsa("tasmax", extent = terra::ext(sp_dist),
                               startdate = startdate, enddate = startdate,
                               dataset = "chelsa-monthly")
 
-          tmax <- max(suppressWarnings(extract(tasmax, sp_dist))[,2],na.rm=T)
+          tmax <- max(suppressWarnings(terra::extract(tasmax, sp_dist))[,2],na.rm=T)
           rm(tasmax)
           gc()
           #TMIN
-          tasmin <- getChelsa("tasmin", extent = ext(sp_dist),
+          tasmin <- getChelsa("tasmin", extent = terra::ext(sp_dist),
                               startdate = startdate, enddate = startdate,
                               dataset = "chelsa-monthly")
 
-          tmin <- min(suppressWarnings(extract(tasmin, sp_dist))[,2],na.rm=T)
+          tmin <- min(suppressWarnings(terra::extract(tasmin, sp_dist))[,2],na.rm=T)
           rm(tasmin)
           gc()
           #AI
-          pet <- getChelsa("pet", extent = ext(sp_dist),
+          pet <- getChelsa("pet", extent = terra::ext(sp_dist),
                            startdate = startdate, enddate = startdate,
                            dataset = "chelsa-monthly")
-          pr <- getChelsa("pr", extent = ext(sp_dist),
+          pr <- getChelsa("pr", extent = terra::ext(sp_dist),
                           startdate = startdate, enddate = startdate,
                           dataset = "chelsa-monthly")
           ai <- pr/pet
-          ai <- subst(ai, Inf, NA)
+          ai <- terra::subst(ai, Inf, NA)
 
-          ai_ext <- suppressWarnings(extract(ai, sp_dist))[,2]
+          ai_ext <- suppressWarnings(terra::extract(ai, sp_dist))[,2]
 
-          lq <- quantile(ai_ext, probs = c(0.25),na.rm=T)[[1]]
-          uq <- quantile(ai_ext, probs = c(0.75),na.rm=T)[[1]]
-          upper_limt <- uq + 1.5*(uq-lq)
+          ai_ext <- na.omit(ai_ext)
+          if(length(ai_ext) == 0){
+            amax <- NA
+            amin <- NA
 
-          if(max(ai_ext, na.rm=T) > upper_limt){
-            amax <- upper_limt
           } else {
-            amax <- max(ai_ext, na.rm=T)
+            lq <- quantile(ai_ext, probs = c(0.25),na.rm=T)[[1]]
+            uq <- quantile(ai_ext, probs = c(0.75),na.rm=T)[[1]]
+            upper_limt <- uq + 1.5*(uq-lq)
+
+            if(max(ai_ext, na.rm=T) > upper_limt){
+              amax <- upper_limt
+            } else {
+              amax <- max(ai_ext, na.rm=T)
+            }
+            amin <- min(ai_ext, na.rm=T)
+
           }
-          amin <- min(ai_ext, na.rm=T)
 
           rm(pet, pr, ai)
           gc()
@@ -1029,29 +1060,29 @@ generate_niche_chelsa <- function(sp_dist,
           startdate <- as.Date(paste0(yr,"-",m,"-15"))
 
           #TMAX
-          tasmax <- getChelsa("tasmax", extent = ext(sp_dist),
+          tasmax <- getChelsa("tasmax", extent = terra::ext(sp_dist),
                               startdate = startdate, enddate = startdate,
                               dataset = "chelsa-monthly")
 
-          tmax <- max(suppressWarnings(extract(tasmax, sp_dist))[,2],na.rm=T)
+          tmax <- max(suppressWarnings(terra::extract(tasmax, sp_dist))[,2],na.rm=T)
           rm(tasmax)
           gc()
           #TMIN
-          tasmin <- getChelsa("tasmin", extent = ext(sp_dist),
+          tasmin <- getChelsa("tasmin", extent = terra::ext(sp_dist),
                               startdate = startdate, enddate = startdate,
                               dataset = "chelsa-monthly")
 
-          tmin <- min(suppressWarnings(extract(tasmin, sp_dist))[,2],na.rm=T)
+          tmin <- min(suppressWarnings(terra::extract(tasmin, sp_dist))[,2],na.rm=T)
           rm(tasmin)
           gc()
           #AI
 
-          pr <- getChelsa("pr", extent = ext(sp_dist),
+          pr <- getChelsa("pr", extent = terra::ext(sp_dist),
                           startdate = startdate, enddate = startdate,
                           dataset = "chelsa-monthly")
 
-          pmin <- min(suppressWarnings(extract(pr, sp_dist))[,2],na.rm=T)
-          pmax <- max(suppressWarnings(extract(pr, sp_dist))[,2],na.rm=T)
+          pmin <- min(suppressWarnings(terra::extract(pr, sp_dist))[,2],na.rm=T)
+          pmax <- max(suppressWarnings(terra::extract(pr, sp_dist))[,2],na.rm=T)
 
           rm(pr)
           gc()
@@ -1079,19 +1110,19 @@ generate_niche_chelsa <- function(sp_dist,
           startdate <- as.Date(paste0(yr,"-",m,"-15"))
 
           #TMAX
-          tasmax <- getChelsa("tasmax", extent = ext(sp_dist),
+          tasmax <- getChelsa("tasmax", extent = terra::ext(sp_dist),
                               startdate = startdate, enddate = startdate,
                               dataset = "chelsa-monthly")
 
-          tmax <- max(suppressWarnings(extract(tasmax, sp_dist))[,2],na.rm=T)
+          tmax <- max(suppressWarnings(terra::extract(tasmax, sp_dist))[,2],na.rm=T)
           rm(tasmax)
           gc()
           #TMIN
-          tasmin <- getChelsa("tasmin", extent = ext(sp_dist),
+          tasmin <- getChelsa("tasmin", extent = terra::ext(sp_dist),
                               startdate = startdate, enddate = startdate,
                               dataset = "chelsa-monthly")
 
-          tmin <- min(suppressWarnings(extract(tasmin, sp_dist))[,2],na.rm=T)
+          tmin <- min(suppressWarnings(terra::extract(tasmin, sp_dist))[,2],na.rm=T)
           rm(tasmin)
           gc()
 
@@ -1116,27 +1147,33 @@ generate_niche_chelsa <- function(sp_dist,
           startdate <- as.Date(paste0(yr,"-",m,"-15"))
 
           #AI
-          pet <- getChelsa("pet", extent = ext(sp_dist),
+          pet <- getChelsa("pet", extent = terra::ext(sp_dist),
                            startdate = startdate, enddate = startdate,
                            dataset = "chelsa-monthly")
-          pr <- getChelsa("pr", extent = ext(sp_dist),
+          pr <- getChelsa("pr", extent = terra::ext(sp_dist),
                           startdate = startdate, enddate = startdate,
                           dataset = "chelsa-monthly")
           ai <- pr/pet
-          ai <- subst(ai, Inf, NA)
+          ai <- terra::subst(ai, Inf, NA)
 
-          ai_ext <- suppressWarnings(extract(ai, sp_dist))[,2]
-
-          lq <- quantile(ai_ext, probs = c(0.25),na.rm=T)[[1]]
-          uq <- quantile(ai_ext, probs = c(0.75),na.rm=T)[[1]]
-          upper_limt <- uq + 1.5*(uq-lq)
-
-          if(max(ai_ext, na.rm=T) > upper_limt){
-            amax <- upper_limt
+          ai_ext <- suppressWarnings(terra::extract(ai, sp_dist))[,2]
+          ai_ext <- na.omit(ai_ext)
+          if(length(ai_ext) == 0){
+            amax <- NA
+            amin <- NA
           } else {
-            amax <- max(ai_ext, na.rm=T)
+            lq <- quantile(ai_ext, probs = c(0.25),na.rm=T)[[1]]
+            uq <- quantile(ai_ext, probs = c(0.75),na.rm=T)[[1]]
+            upper_limt <- uq + 1.5*(uq-lq)
+
+            if(max(ai_ext, na.rm=T) > upper_limt){
+              amax <- upper_limt
+            } else {
+              amax <- max(ai_ext, na.rm=T)
+            }
+            amin <- min(ai_ext, na.rm=T)
+
           }
-          amin <- min(ai_ext, na.rm=T)
 
           rm(pet, pr, ai)
           gc()
@@ -1160,12 +1197,12 @@ generate_niche_chelsa <- function(sp_dist,
 
           startdate <- as.Date(paste0(yr,"-",m,"-15"))
 
-          pr <- getChelsa("pr", extent = ext(sp_dist),
+          pr <- getChelsa("pr", extent = terra::ext(sp_dist),
                           startdate = startdate, enddate = startdate,
                           dataset = "chelsa-monthly")
 
-          pmin <- min(suppressWarnings(extract(pr, sp_dist))[,2],na.rm=T)
-          pmax <- max(suppressWarnings(extract(pr, sp_dist))[,2],na.rm=T)
+          pmin <- min(suppressWarnings(terra::extract(pr, sp_dist))[,2],na.rm=T)
+          pmax <- max(suppressWarnings(terra::extract(pr, sp_dist))[,2],na.rm=T)
 
           rm(pr)
           gc()
@@ -1203,9 +1240,9 @@ generate_niche_chelsa <- function(sp_dist,
 
   else if (isTRUE(is.data.frame(sp_dist))){
     if(isFALSE(monthly)){
-      grp_all_df <- grp_all_df %>%
-        dplyr::select(-Month) %>%
-        dplyr::group_by(Group)%>%
+      grp_all_df <- grp_all_df[,-1]
+        grp_all_df <- grp_all_df %>%
+          dplyr::group_by(Group)%>%
         dplyr::summarise_all(mean, na.rm=T)
     }
     if(isTRUE(is.null(tmp_units))){
@@ -1224,9 +1261,9 @@ generate_niche_chelsa <- function(sp_dist,
            isFALSE(is.data.frame(sp_dist)) &&
            isTRUE(class(sp_dist[[1]]) =="SpatVector")){
     if(isFALSE(monthly)){
-      all_df <- all_df %>%
-        dplyr::select(-Month) %>%
-        dplyr::group_by(List_Position)%>%
+      all_df <- all_df[,-1]
+        all_df <- all_df %>%
+          dplyr::group_by(List_Position)%>%
         dplyr::summarise_all(mean,na.rm=T)
     }
     if(isTRUE(is.null(tmp_units))){

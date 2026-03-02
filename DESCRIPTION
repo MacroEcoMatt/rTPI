@@ -14,7 +14,9 @@ Description: A system for calculating Thermal Position and
 Depends:
     R (>= 3.5.0)
 Imports:
+    climateR,
     dplyr,
+    Rchelsa,
     terra
 Suggests:
     devtools,
