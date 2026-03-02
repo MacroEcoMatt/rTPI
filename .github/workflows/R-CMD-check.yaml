@@ -32,7 +32,7 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Install Rchelsa from GitLab
-        run: remotes::install_git("https://gitlabext.wsl.ch/karger/rchelsa.git")
+        run: devtools::install_git("https://gitlabext.wsl.ch/karger/rchelsa.git")
         shell: Rscript {0}
 
       - uses: r-lib/actions/setup-pandoc@v2
