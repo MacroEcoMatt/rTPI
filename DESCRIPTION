@@ -24,7 +24,7 @@ Suggests:
     covr
 Remotes:
     github::mikejohnson51/climateR,
-    gitlab::karger/rchelsa
+    git::https://gitlabext.wsl.ch/karger/rchelsa.git
 License: CC BY 4.0 + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
