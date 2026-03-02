@@ -23,6 +23,12 @@
 #' @param use_year Boolean parameter, defualt FALSE. set to TURE to use yearly
 #' thermal tolerance limits when Month is NA
 #'
+#' @param tmp_unit Input string. Defaults to NULL which informs function to
+#' calculate TPI using degrees Celsius. Options: "Fahrenheit", "Kelvin".
+#' "Fahrenheit" indicates user submitted temperature data is in degrees
+#' Fahrenheit."Kelvin" indicates user submitted temperature data is in degrees
+#' Kelvin.
+#'
 #' @param flag_sp Boolean parameter, default FALSE. Set to true to add column
 #' to final data frame that contains TRUE values for submitted species Binomials
 #' that match TPI data set, and FALSE for rows that contain Binomials that do
@@ -61,12 +67,16 @@
 #'                 flag_sp = TRUE, flag_month = TRUE, flag_tmp = TRUE)
 #' @importFrom stats na.omit
 #' @export
-tpi <- function(sp_df, tmp_var = NULL, use_year = FALSE, flag_sp = FALSE,
+tpi <- function(sp_df, tmp_var = NULL, use_year = FALSE, tmp_unit = NULL, flag_sp = FALSE,
                 flag_month = FALSE, flag_tmp = FALSE){
   Month<- TMax<- TMin<- TPI<- TPI_max<- TPI_mean<- TPI_min<- Tm<-tmax <- tmin <- NULL
   if(any(sp_df$Month %in% as.character(c(1:12))) &&
      any(sp_df$Month %in% month.abb[1:12])){
     stop("Month values are inconsistent: Months cannont contain 3 letter month codes and numeric values")
+  }
+
+  if(!is.null(tmp_unit) && !tmp_unit == "Fahrenheit" && !tmp_unit == "Kelvin"){
+    stop("tmp_unit is misspecified")
   }
 
   if (!is.null(tmp_var) && !tmp_var == "all" && !tmp_var == "minmax"){
@@ -100,6 +110,15 @@ tpi <- function(sp_df, tmp_var = NULL, use_year = FALSE, flag_sp = FALSE,
     if(isTRUE(use_year)){
       TPI_OUTPUT <- dplyr::left_join(TPI_OUTPUT,yearly_limits[,c(6:8)])
 
+      ##change units
+      if(tmp_unit == "Fahrenheit"){
+        TPI_OUTPUT <- TPI_OUTPUT %>% mutate(TMin = (TMin * (9/5))+32,
+                                        TMax = (TMax * (9/5))+32)
+      } else if(tmp_unit == "Kelvin"){
+        TPI_OUTPUT <- TPI_OUTPUT %>% mutate(TMin = TMin +273.15,
+                                        TMax = TMax +273.15)
+      }else {TPI_OUTPUT <- TPI_OUTPUT}
+      ##
       TPI_OUTPUT <- dplyr::mutate(TPI_OUTPUT,
                                   TPI = (Tm-TMin)/(TMax-TMin))
 
@@ -108,6 +127,16 @@ tpi <- function(sp_df, tmp_var = NULL, use_year = FALSE, flag_sp = FALSE,
       if(is.numeric(TPI_OUTPUT$Month)){
         mnth_lim <- month_limits[,c(6:8,11)]
         colnames(mnth_lim)<-c("Binomial","TMin","TMax","Month")
+
+        ##change units
+        if(tmp_unit == "Fahrenheit"){
+          mnth_lim <- mnth_lim %>% mutate(TMin = (TMin * (9/5))+32,
+                                          TMax = (TMax * (9/5))+32)
+        } else if(tmp_unit == "Kelvin"){
+          mnth_lim <- mnth_lim %>% mutate(TMin = TMin +273.15,
+                                          TMax = TMax +273.15)
+        }else {mnth_lim <- mnth_lim}
+        ##
 
         TPI_OUTPUT <- dplyr::left_join(TPI_OUTPUT,mnth_lim)
         TPI_OUTPUT <- dplyr::mutate(TPI_OUTPUT,
@@ -119,6 +148,15 @@ tpi <- function(sp_df, tmp_var = NULL, use_year = FALSE, flag_sp = FALSE,
         colnames(mnth_lim)<-c("Binomial","TMin","TMax","Month")
         mnth_lim$Month <- as.character(mnth_lim$Month)
 
+        ##change units
+        if(tmp_unit == "Fahrenheit"){
+          mnth_lim <- mnth_lim %>% mutate(TMin = (TMin * (9/5))+32,
+                                          TMax = (TMax * (9/5))+32)
+        } else if(tmp_unit == "Kelvin"){
+          mnth_lim <- mnth_lim %>% mutate(TMin = TMin +273.15,
+                                          TMax = TMax +273.15)
+        }else {mnth_lim <- mnth_lim}
+        ##
         TPI_OUTPUT <- dplyr::left_join(TPI_OUTPUT,mnth_lim)
         TPI_OUTPUT <- dplyr::mutate(TPI_OUTPUT,
                                     TPI = (Tm-TMin)/(TMax-TMin))
@@ -128,6 +166,16 @@ tpi <- function(sp_df, tmp_var = NULL, use_year = FALSE, flag_sp = FALSE,
         mnth_lim <- month_limits[,c(6:8,11)]
         colnames(mnth_lim)<-c("Binomial","TMin","TMax","Month")
         mnth_lim$Month <- as.character(mnth_lim$Month)
+
+        ##change units
+        if(tmp_unit == "Fahrenheit"){
+          mnth_lim <- mnth_lim %>% mutate(TMin = (TMin * (9/5))+32,
+                                          TMax = (TMax * (9/5))+32)
+        } else if(tmp_unit == "Kelvin"){
+          mnth_lim <- mnth_lim %>% mutate(TMin = TMin +273.15,
+                                          TMax = TMax +273.15)
+        } else {mnth_lim <- mnth_lim}
+        ##
 
         mnth_lim <- dplyr::mutate(mnth_lim, Month = as.character(Month))
         TPI_OUTPUT <- dplyr::left_join(TPI_OUTPUT,mnth_lim)
@@ -143,6 +191,18 @@ tpi <- function(sp_df, tmp_var = NULL, use_year = FALSE, flag_sp = FALSE,
         TPI_Year <- subset(TPI_Year,select = -c(TPI))
 
         TPI_Year <-  dplyr::left_join(TPI_Year,yearly_limits[,c(6:8)])
+
+        ##change units
+        if(tmp_unit == "Fahrenheit"){
+          TPI_Year <- TPI_Year %>% mutate(TMin = (TMin * (9/5))+32,
+                                          TMax = (TMax * (9/5))+32)
+        } else if(tmp_unit == "Kelvin"){
+          TPI_Year <- TPI_Year %>% mutate(TMin = TMin +273.15,
+                                          TMax = TMax +273.15)
+        }else{
+          TPI_Year <- TPI_Year
+        }
+        ##
         TPI_Year <- dplyr::mutate(TPI_Year,
                                   TPI = (Tm-TMin)/(TMax-TMin))
         TPI_Year <- subset(TPI_Year,select = -c(TMin,TMax))
@@ -190,6 +250,17 @@ tpi <- function(sp_df, tmp_var = NULL, use_year = FALSE, flag_sp = FALSE,
     if(isTRUE(use_year)){
       TPI_OUTPUT <- dplyr::left_join(TPI_OUTPUT,yearly_limits[,c(6:8)])
 
+      ##change units
+      if(tmp_unit == "Fahrenheit"){
+        TPI_OUTPUT <- TPI_OUTPUT %>% mutate(TMin = (TMin * (9/5))+32,
+                                        TMax = (TMax * (9/5))+32)
+      } else if(tmp_unit == "Kelvin"){
+        TPI_OUTPUT <- TPI_OUTPUT %>% mutate(TMin = TMin +273.15,
+                                        TMax = TMax +273.15)
+      }else {TPI_OUTPUT <- TPI_OUTPUT}
+      ##
+
+
       TPI_OUTPUT <- dplyr::mutate(TPI_OUTPUT,
                                   TPI_min = (tmin-TMin)/(TMax-TMin),
                                   TPI_max = (tmax-TMin)/(TMax-TMin))
@@ -200,6 +271,16 @@ tpi <- function(sp_df, tmp_var = NULL, use_year = FALSE, flag_sp = FALSE,
       if(is.numeric(TPI_OUTPUT$Month)){
         mnth_lim <- month_limits[,c(6:8,11)]
         colnames(mnth_lim)<-c("Binomial","TMin","TMax","Month")
+
+        ##change units
+        if(tmp_unit == "Fahrenheit"){
+          mnth_lim <- mnth_lim %>% mutate(TMin = (TMin * (9/5))+32,
+                                          TMax = (TMax * (9/5))+32)
+        } else if(tmp_unit == "Kelvin"){
+          mnth_lim <- mnth_lim %>% mutate(TMin = TMin +273.15,
+                                          TMax = TMax +273.15)
+        }else {mnth_lim <- mnth_lim}
+        ##
 
         TPI_OUTPUT <- dplyr::left_join(TPI_OUTPUT,mnth_lim)
 
@@ -213,6 +294,16 @@ tpi <- function(sp_df, tmp_var = NULL, use_year = FALSE, flag_sp = FALSE,
         mnth_lim <- month_limits[,c(6:8,12)]
         colnames(mnth_lim)<-c("Binomial","TMin","TMax","Month")
 
+        ##change units
+        if(tmp_unit == "Fahrenheit"){
+          mnth_lim <- mnth_lim %>% mutate(TMin = (TMin * (9/5))+32,
+                                          TMax = (TMax * (9/5))+32)
+        } else if(tmp_unit == "Kelvin"){
+          mnth_lim <- mnth_lim %>% mutate(TMin = TMin +273.15,
+                                          TMax = TMax +273.15)
+        }else {mnth_lim <- mnth_lim}
+        ##
+
         TPI_OUTPUT <- dplyr::left_join(TPI_OUTPUT,mnth_lim)
         TPI_OUTPUT <- dplyr::mutate(TPI_OUTPUT,
                                     TPI_min = (tmin-TMin)/(TMax-TMin),
@@ -224,6 +315,16 @@ tpi <- function(sp_df, tmp_var = NULL, use_year = FALSE, flag_sp = FALSE,
         mnth_lim <- month_limits[,c(6:8,11)]
         colnames(mnth_lim)<-c("Binomial","TMin","TMax","Month")
         mnth_lim$Month <- as.character(mnth_lim$Month)
+
+        ##change units
+        if(tmp_unit == "Fahrenheit"){
+          mnth_lim <- mnth_lim %>% mutate(TMin = (TMin * (9/5))+32,
+                                          TMax = (TMax * (9/5))+32)
+        } else if(tmp_unit == "Kelvin"){
+          mnth_lim <- mnth_lim %>% mutate(TMin = TMin +273.15,
+                                          TMax = TMax +273.15)
+        }else {mnth_lim <- mnth_lim}
+        ##
 
         mnth_lim <- dplyr::mutate(mnth_lim, Month = as.character(Month))
         TPI_OUTPUT <- dplyr::left_join(TPI_OUTPUT,mnth_lim)
@@ -242,6 +343,17 @@ tpi <- function(sp_df, tmp_var = NULL, use_year = FALSE, flag_sp = FALSE,
         TPI_Year <- subset(TPI_Year,select = -c(TPI_min,TPI_max))
 
         TPI_Year <-  dplyr::left_join(TPI_Year,yearly_limits[,c(6:8)])
+
+        ##change units
+        if(tmp_unit == "Fahrenheit"){
+          TPI_Year <- TPI_Year %>% mutate(TMin = (TMin * (9/5))+32,
+                                          TMax = (TMax * (9/5))+32)
+        } else if(tmp_unit == "Kelvin"){
+          TPI_Year <- TPI_Year %>% mutate(TMin = TMin +273.15,
+                                          TMax = TMax +273.15)
+        }else {TPI_Year <- TPI_Year}
+        ##
+
         TPI_Year <- dplyr::mutate(TPI_Year,
                                   TPI_min = (tmin-TMin)/(TMax-TMin),
                                   TPI_max = (tmax-TMin)/(TMax-TMin))
@@ -290,6 +402,16 @@ tpi <- function(sp_df, tmp_var = NULL, use_year = FALSE, flag_sp = FALSE,
     if(isTRUE(use_year)){
       TPI_OUTPUT <- dplyr::left_join(TPI_OUTPUT,yearly_limits[,c(6:8)])
 
+      ##change units
+      if(tmp_unit == "Fahrenheit"){
+        TPI_OUTPUT <- TPI_OUTPUT %>% mutate(TMin = (TMin * (9/5))+32,
+                                        TMax = (TMax * (9/5))+32)
+      } else if(tmp_unit == "Kelvin"){
+        TPI_OUTPUT <- TPI_OUTPUT %>% mutate(TMin = TMin +273.15,
+                                        TMax = TMax +273.15)
+      }else {TPI_OUTPUT <- TPI_OUTPUT}
+      ##
+
       TPI_OUTPUT <- dplyr::mutate(TPI_OUTPUT,
                                   TPI_min = (tmin-TMin)/(TMax-TMin),
                                   TPI_max = (tmax-TMin)/(TMax-TMin),
@@ -302,6 +424,16 @@ tpi <- function(sp_df, tmp_var = NULL, use_year = FALSE, flag_sp = FALSE,
       if(is.numeric(TPI_OUTPUT$Month)){
         mnth_lim <- month_limits[,c(6:8,11)]
         colnames(mnth_lim)<-c("Binomial","TMin","TMax","Month")
+
+        ##change units
+        if(tmp_unit == "Fahrenheit"){
+          mnth_lim <- mnth_lim %>% mutate(TMin = (TMin * (9/5))+32,
+                                              TMax = (TMax * (9/5))+32)
+        } else if(tmp_unit == "Kelvin"){
+          mnth_lim <- mnth_lim %>% mutate(TMin = TMin +273.15,
+                                              TMax = TMax +273.15)
+        }else {mnth_lim <- mnth_lim}
+        ##
 
         TPI_OUTPUT <- dplyr::left_join(TPI_OUTPUT,mnth_lim)
 
@@ -316,6 +448,16 @@ tpi <- function(sp_df, tmp_var = NULL, use_year = FALSE, flag_sp = FALSE,
         mnth_lim <- month_limits[,c(6:8,12)]
         colnames(mnth_lim)<-c("Binomial","TMin","TMax","Month")
 
+        ##change units
+        if(tmp_unit == "Fahrenheit"){
+          mnth_lim <- mnth_lim %>% mutate(TMin = (TMin * (9/5))+32,
+                                          TMax = (TMax * (9/5))+32)
+        } else if(tmp_unit == "Kelvin"){
+          mnth_lim <- mnth_lim %>% mutate(TMin = TMin +273.15,
+                                          TMax = TMax +273.15)
+        }else {mnth_lim <- mnth_lim}
+        ##
+
         TPI_OUTPUT <- dplyr::left_join(TPI_OUTPUT,mnth_lim)
         TPI_OUTPUT <- dplyr::mutate(TPI_OUTPUT,
                                     TPI_min = (tmin-TMin)/(TMax-TMin),
@@ -328,6 +470,16 @@ tpi <- function(sp_df, tmp_var = NULL, use_year = FALSE, flag_sp = FALSE,
         mnth_lim <- month_limits[,c(6:8,11)]
         colnames(mnth_lim)<-c("Binomial","TMin","TMax","Month")
         mnth_lim$Month <- as.character(mnth_lim$Month)
+
+        ##change units
+        if(tmp_unit == "Fahrenheit"){
+          mnth_lim <- mnth_lim %>% mutate(TMin = (TMin * (9/5))+32,
+                                          TMax = (TMax * (9/5))+32)
+        } else if(tmp_unit == "Kelvin"){
+          mnth_lim <- mnth_lim %>% mutate(TMin = TMin +273.15,
+                                          TMax = TMax +273.15)
+        }else {mnth_lim <- mnth_lim}
+        ##
 
         mnth_lim <- dplyr::mutate(mnth_lim, Month = as.character(Month))
         TPI_OUTPUT <- dplyr::left_join(TPI_OUTPUT,mnth_lim)
@@ -346,6 +498,15 @@ tpi <- function(sp_df, tmp_var = NULL, use_year = FALSE, flag_sp = FALSE,
         TPI_Year <- subset(TPI_Year,select = -c(TPI_min,TPI_max,TPI_mean))
 
         TPI_Year <-  dplyr::left_join(TPI_Year,yearly_limits[,c(6:8)])
+        ##change units
+        if(tmp_unit == "Fahrenheit"){
+          TPI_Year <- TPI_Year %>% mutate(TMin = (TMin * (9/5))+32,
+                                          TMax = (TMax * (9/5))+32)
+        } else if(tmp_unit == "Kelvin"){
+          TPI_Year <- TPI_Year %>% mutate(TMin = TMin +273.15,
+                                          TMax = TMax +273.15)
+        }else {TPI_Year <- TPI_Year}
+        ##
         TPI_Year <- dplyr::mutate(TPI_Year,
                                   TPI_min = (tmin-TMin)/(TMax-TMin),
                                   TPI_max = (tmax-TMin)/(TMax-TMin),

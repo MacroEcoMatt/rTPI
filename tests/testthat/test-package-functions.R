@@ -7,6 +7,15 @@ test_that("single string entry reutrns data", {
   expect_length(binomial_check(c("Poecile atripillus", "Melospiza dia")),4)
 })
 
+#TEST FUNCTION species_list
+test_that("single string entry reutrns data", {
+  expect_error(species_list(class="m"))
+  expect_no_error(species_list(class="mammal"))
+  expect_no_error(species_list(class="bird"))
+  expect_no_error(species_list(class="amphibian"))
+  expect_no_error(species_list(class="reptile"))
+})
+
 #TEST FUNCTION highertaxa_limits
 test_that("Check that error codes work properly and returns proper results",{
   expect_error(highertaxa_limits(taxa_code ="c"))
@@ -122,9 +131,37 @@ test_that("Check that error codes work properly and returns proper results",{
   expect_no_error(tpi(clean_datac, tmp_var = "minmax"))
   expect_no_error(tpi(clean_datac, tmp_var = "all"))
 
+  expect_no_error(tpi(clean_data, tmp_unit = "Fahrenheit"))
+  expect_no_error(tpi(clean_data, tmp_var = "minmax", tmp_unit = "Fahrenheit"))
+  expect_no_error(tpi(clean_data, tmp_var = "all", tmp_unit = "Fahrenheit"))
+  expect_no_error(tpi(clean_datab, tmp_unit = "Fahrenheit"))
+  expect_no_error(tpi(clean_datab, tmp_var = "minmax", tmp_unit = "Fahrenheit"))
+  expect_no_error(tpi(clean_datab, tmp_var = "all", tmp_unit = "Fahrenheit"))
+  expect_no_error(tpi(clean_datac, tmp_unit = "Fahrenheit"))
+  expect_no_error(tpi(clean_datac, tmp_var = "minmax", tmp_unit = "Fahrenheit"))
+  expect_no_error(tpi(clean_datac, tmp_var = "all", tmp_unit = "Fahrenheit"))
+
+  expect_no_error(tpi(clean_data, tmp_unit = "Kelvin"))
+  expect_no_error(tpi(clean_data, tmp_var = "minmax", tmp_unit = "Kelvin"))
+  expect_no_error(tpi(clean_data, tmp_var = "all", tmp_unit = "Kelvin"))
+  expect_no_error(tpi(clean_datab, tmp_unit = "Kelvin"))
+  expect_no_error(tpi(clean_datab, tmp_var = "minmax", tmp_unit = "Kelvin"))
+  expect_no_error(tpi(clean_datab, tmp_var = "all", tmp_unit = "Kelvin"))
+  expect_no_error(tpi(clean_datac, tmp_unit = "Kelvin"))
+  expect_no_error(tpi(clean_datac, tmp_var = "minmax", tmp_unit = "Kelvin"))
+  expect_no_error(tpi(clean_datac, tmp_var = "all", tmp_unit = "Kelvin"))
+
   expect_no_error(tpi(clean_data, use_year = T))
   expect_no_error(tpi(clean_data, tmp_var = "minmax", use_year = T))
   expect_no_error(tpi(clean_data, tmp_var = "all", use_year = T))
+
+  expect_no_error(tpi(clean_data, use_year = T, tmp_unit = "Fahrenheit"))
+  expect_no_error(tpi(clean_data, tmp_var = "minmax", use_year = T, tmp_unit = "Fahrenheit"))
+  expect_no_error(tpi(clean_data, tmp_var = "all", use_year = T, tmp_unit = "Fahrenheit"))
+
+  expect_no_error(tpi(clean_data, use_year = T, tmp_unit = "Kelvin"))
+  expect_no_error(tpi(clean_data, tmp_var = "minmax", use_year = T, tmp_unit = "Kelvin"))
+  expect_no_error(tpi(clean_data, tmp_var = "all", use_year = T, tmp_unit = "Kelvin"))
 
   expect_no_error(tpi(clean_data, flag_month = T, flag_tmp = T,flag_sp=T))
   expect_no_error(tpi(clean_data, tmp_var = "minmax",flag_sp = T, flag_month = T, flag_tmp = T))
@@ -139,6 +176,7 @@ test_that("Check that error codes work properly and returns proper results",{
   expect_warning(tpi(species_noerrors, tmp_var = "all", flag_sp = T, flag_month = T, flag_tmp = T, use_year = T))
 
   expect_error(tpi(species_noerrors2))
+  expect_error(tpi(clean_data, tmp_unit = "a"))
   expect_error(tpi(clean_data,tmp_var = "a"))
   expect_error(tpi(species_char_month,tmp_var = "minmax"))
   expect_error(tpi(species_char_month,tmp_var = "all"))
@@ -257,10 +295,138 @@ test_that("Check that error codes work properly and returns proper results",{
   expect_error(api(mon_neg))
 })
 
-
-
 splist <- c("Poecile atricapillus", "Parus atricapillus","ile atricapillus")
 #TEST FUNCTION syn_check
 test_that("Check to ensure that variables are extracted appropriately",{
   expect_no_error(syn_check(splist))
+})
+
+##generate niche
+niche_noerrors <- data.frame(
+  Group = c("Poecile atricapillus","Poecile atricapillus","Poecile atricapillus","Poecile atricapillus"),
+  lat = c(50,51,52,53),
+  lon = c(100,100,100,100)
+)
+wrong_group <- data.frame(
+  Grou = c("Poecile atricapillus","Poecile atricapillus","Poecile atricapillus","Poecile atricapillus"),
+  lat = c(50,51,52,53),
+  lon = c(100,100,100,100)
+)
+wrong_lat <- data.frame(
+  Grou = c("Poecile atricapillus","Poecile atricapillus","Poecile atricapillus","Poecile atricapillus"),
+  lat = c(500,51,52,53),
+  lon = c(100,100,100,100)
+)
+wrong_type <- TRUE
+wrong_type2 <- list("t","t")
+spatvect_obj <- terra::vect(data.frame(
+  Group = c("Poecile atricapillus","Poecile atricapillus","Poecile atricapillus","Poecile atricapillus"),
+  lat = c(50,51,52,53),
+  lon = c(100,100,100,100)),geom=c("lon", "lat"),
+  crs="+proj=longlat +datum=WGS84")
+
+spatvect_obj2 <- list(spatvect_obj,spatvect_obj)
+
+#TEST FUNCTION generate niche
+test_that("Check that error codes work properly and returns proper results",{
+  expect_no_error(generate_niche(species_noerrors, monthly=F, time_period=c(1980)))
+  expect_no_error(generate_niche(species_noerrors, precip = T, time_period=c(1980)))
+  expect_no_error(generate_niche(species_noerrors, tmp_units = "Kelvin", time_period=c(1980)))
+  expect_no_error(generate_niche(species_noerrors, tmp_units = "Fahrenheit", time_period=c(1980)))
+  expect_no_error(generate_niche(species_noerrors, niche_vars = "temp", time_period=c(1980)))
+  expect_no_error(generate_niche(species_noerrors, niche_vars = "arid", time_period=c(1980)))
+  expect_no_error(generate_niche(species_noerrors, niche_vars = "arid", precip = F, time_period=c(1980)))
+
+
+  expect_no_error(generate_niche(spatvect_obj, monthly = F, time_period=c(1980)))
+  expect_no_error(generate_niche(spatvect_obj, precip = T, time_period=c(1980)))
+  expect_no_error(generate_niche(spatvect_obj, niche_vars = "temp", time_period=c(1980)))
+  expect_no_error(generate_niche(spatvect_obj, niche_vars = "arid", time_period=c(1980)))
+  expect_no_error(generate_niche(spatvect_obj, niche_vars = "arid", precip = F, time_period=c(1980)))
+  expect_no_error(generate_niche(spatvect_obj, tmp_units = "Kelvin", time_period=c(1980)))
+  expect_no_error(generate_niche(spatvect_obj, tmp_units = "Fahrenheit", time_period=c(1980)))
+
+  expect_no_error(generate_niche(spatvect_obj2, monthly = F, time_period=c(1980)))
+  expect_no_error(generate_niche(spatvect_obj2, precip = T, time_period=c(1980)))
+  expect_no_error(generate_niche(spatvect_obj2, niche_vars = "temp", time_period=c(1980)))
+  expect_no_error(generate_niche(spatvect_obj2, niche_vars = "arid", time_period=c(1980)))
+  expect_no_error(generate_niche(spatvect_obj2, niche_vars = "arid", precip = F, time_period=c(1980)))
+  expect_no_error(generate_niche(spatvect_obj2, tmp_units = "Kelvin", time_period=c(1980)))
+  expect_no_error(generate_niche(spatvect_obj2, tmp_units = "Fahrenheit", time_period=c(1980)))
+
+  expect_error(generate_niche(wrong_group))
+  expect_error(generate_niche(wrong_lat))
+  expect_error(generate_niche(wrong_type))
+  expect_error(generate_niche(species_noerrors, monthly="tt"))
+  expect_error(generate_niche(species_noerrors, precip="tt"))
+  expect_error(generate_niche(species_noerrors, time_period = c(1900)))
+  expect_error(generate_niche(species_noerrors, time_period = c("1900")))
+  expect_error(generate_niche(species_noerrors, niche_vars = "tt"))
+  expect_error(generate_niche(wrong_type2))
+  expect_error(generate_niche(species_noerrors, temp_units = "tt"))
+})
+
+##generate niche
+niche_noerrors <- data.frame(
+  Group = c("Poecile atricapillus","Poecile atricapillus","Poecile atricapillus","Poecile atricapillus"),
+  lat = c(50,51,52,53),
+  lon = c(100,100,100,100)
+)
+wrong_group <- data.frame(
+  Grou = c("Poecile atricapillus","Poecile atricapillus","Poecile atricapillus","Poecile atricapillus"),
+  lat = c(50,51,52,53),
+  lon = c(100,100,100,100)
+)
+wrong_lat <- data.frame(
+  Grou = c("Poecile atricapillus","Poecile atricapillus","Poecile atricapillus","Poecile atricapillus"),
+  lat = c(500,51,52,53),
+  lon = c(100,100,100,100)
+)
+wrong_type <- TRUE
+wrong_type2 <- list("t","t")
+spatvect_obj <- terra::vect(data.frame(
+  Group = c("Poecile atricapillus","Poecile atricapillus","Poecile atricapillus","Poecile atricapillus"),
+  lat = c(50,51,52,53),
+  lon = c(100,100,100,100)),geom=c("lon", "lat"),
+  crs="+proj=longlat +datum=WGS84")
+
+spatvect_obj2 <- list(spatvect_obj,spatvect_obj)
+
+#TEST FUNCTION generate niche chelsa
+test_that("Check that error codes work properly and returns proper results",{
+  expect_no_error(generate_niche_chelsa(species_noerrors, monthly=F, time_period=c(1980)))
+  expect_no_error(generate_niche_chelsa(species_noerrors, precip = T, time_period=c(1980)))
+  expect_no_error(generate_niche_chelsa(species_noerrors, tmp_units = "Celsius", time_period=c(1980)))
+  expect_no_error(generate_niche_chelsa(species_noerrors, tmp_units = "Fahrenheit", time_period=c(1980)))
+  expect_no_error(generate_niche_chelsa(species_noerrors, niche_vars = "temp", time_period=c(1980)))
+  expect_no_error(generate_niche_chelsa(species_noerrors, niche_vars = "arid", time_period=c(1980)))
+  expect_no_error(generate_niche_chelsa(species_noerrors, niche_vars = "arid", precip = F, time_period=c(1980)))
+
+
+  expect_no_error(generate_niche_chelsa(spatvect_obj, monthly = F, time_period=c(1980)))
+  expect_no_error(generate_niche_chelsa(spatvect_obj, precip = T, time_period=c(1980)))
+  expect_no_error(generate_niche_chelsa(spatvect_obj, niche_vars = "temp", time_period=c(1980)))
+  expect_no_error(generate_niche_chelsa(spatvect_obj, niche_vars = "arid", time_period=c(1980)))
+  expect_no_error(generate_niche_chelsa(spatvect_obj, niche_vars = "arid", precip = F, time_period=c(1980)))
+  expect_no_error(generate_niche_chelsa(spatvect_obj, tmp_units = "Celsius", time_period=c(1980)))
+  expect_no_error(generate_niche_chelsa(spatvect_obj, tmp_units = "Fahrenheit", time_period=c(1980)))
+
+  expect_no_error(generate_niche_chelsa(spatvect_obj2, monthly = F, time_period=c(1980)))
+  expect_no_error(generate_niche_chelsa(spatvect_obj2, precip = T, time_period=c(1980)))
+  expect_no_error(generate_niche_chelsa(spatvect_obj2, niche_vars = "temp", time_period=c(1980)))
+  expect_no_error(generate_niche_chelsa(spatvect_obj2, niche_vars = "arid", time_period=c(1980)))
+  expect_no_error(generate_niche_chelsa(spatvect_obj2, niche_vars = "arid", precip = F, time_period=c(1980)))
+  expect_no_error(generate_niche_chelsa(spatvect_obj2, tmp_units = "Celsius", time_period=c(1980)))
+  expect_no_error(generate_niche_chelsa(spatvect_obj2, tmp_units = "Fahrenheit", time_period=c(1980)))
+
+  expect_error(generate_niche_chelsa(wrong_group))
+  expect_error(generate_niche_chelsa(wrong_lat))
+  expect_error(generate_niche_chelsa(wrong_type))
+  expect_error(generate_niche_chelsa(species_noerrors, monthly="tt"))
+  expect_error(generate_niche_chelsa(species_noerrors, precip="tt"))
+  expect_error(generate_niche_chelsa(species_noerrors, time_period = c(1900)))
+  expect_error(generate_niche_chelsa(species_noerrors, time_period = c("1900")))
+  expect_error(generate_niche_chelsa(species_noerrors, niche_vars = "tt"))
+  expect_error(generate_niche_chelsa(wrong_type2))
+  expect_error(generate_niche_chelsa(species_noerrors, temp_units = "tt"))
 })

@@ -8,6 +8,7 @@ tpi(
   sp_df,
   tmp_var = NULL,
   use_year = FALSE,
+  tmp_unit = NULL,
   flag_sp = FALSE,
   flag_month = FALSE,
   flag_tmp = FALSE
@@ -32,6 +33,12 @@ Tm = TPI_mean when tmp_var = "all".}
 
 \item{use_year}{Boolean parameter, defualt FALSE. set to TURE to use yearly
 thermal tolerance limits when Month is NA}
+
+\item{tmp_unit}{Input string. Defaults to NULL which informs function to
+calculate TPI using degrees Celsius. Options: "Fahrenheit", "Kelvin".
+"Fahrenheit" indicates user submitted temperature data is in degrees
+Fahrenheit."Kelvin" indicates user submitted temperature data is in degrees
+Kelvin.}
 
 \item{flag_sp}{Boolean parameter, default FALSE. Set to true to add column
 to final data frame that contains TRUE values for submitted species Binomials

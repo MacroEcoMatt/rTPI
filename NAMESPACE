@@ -2,8 +2,11 @@
 
 export(api)
 export(binomial_check)
+export(generate_niche)
+export(generate_niche_chelsa)
 export(highertaxa_limits)
 export(species_limits)
+export(species_list)
 export(syn_check)
 export(tpi)
 importFrom(stats,na.omit)
